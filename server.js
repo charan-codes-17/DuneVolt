@@ -722,9 +722,10 @@ function handleClientAction(msg, ws) {
 
     case 'SIMULATE_STORM': {
       // Storm trigger: raise wind & dust, triggering autonomous prediction and stow
-      farmState.environment.windSpeed = 82;
-      farmState.environment.dustLevel = 52;
-      addEvent('WARNING', 'Simulate Storm Event: Extreme wind front (82 km/h) approaching solar farm.');
+      farmState.environment.windSpeed = 92;
+      farmState.environment.dustLevel = 65;
+      farmState.environment.visibility = 60;
+      addEvent('WARNING', 'Simulate Storm Event: Extreme wind front (92 km/h) approaching solar farm.');
       recalculateFarmPhysics();
       startStormDefenseSequence();
       break;
