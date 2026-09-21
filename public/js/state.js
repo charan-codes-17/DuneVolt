@@ -88,8 +88,11 @@ class FarmStateManager {
   attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      const delay = Math.min(3000, 1000 * this.reconnectAttempts);
-      setTimeout(() => this.initWebSocket(), delay);
+      // Phase 8 – Risk 4: Exponential backoff: 500ms → 1s → 2s → 4s → 8s (max 10s)
+      const delay = Math.min(10000, 500 * Math.pow(2, this.reconnectAttempts - 1));
+      this._reconnectTimer = setTimeout(() => this.initWebSocket(), delay);
+      // Notify UI about reconnect attempt number for the OFFLINE badge
+      this.notifyConnectionStatus(false, this.reconnectAttempts, delay);
     }
   }
 
@@ -139,10 +142,10 @@ class FarmStateManager {
     }
   }
 
-  notifyConnectionStatus(status) {
+  notifyConnectionStatus(status, reconnectAttempt = 0, nextRetryMs = 0) {
     for (const cb of this.connectionStatusListeners) {
       try {
-        cb(status);
+        cb(status, reconnectAttempt, nextRetryMs);
       } catch (err) {
         console.error('[StateSync] Status callback error', err);
       }

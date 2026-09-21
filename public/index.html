@@ -230,7 +230,11 @@
           <div class="ai-ops-grid">
             <!-- Storm Risk Box -->
             <div class="ai-stat-box">
-              <div class="ai-stat-label">Storm Risk Model</div>
+              <div class="ai-stat-label">
+                Storm Risk Model
+                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
+                <span class="rule-based-badge" title="Rule-based threshold model. NOT a trained ML model.">⚙ RULE-BASED</span>
+              </div>
               <div class="ai-stat-value" id="ai-storm-risk">14%</div>
               <div class="risk-progress-bar">
                 <div class="risk-progress-fill" id="storm-risk-bar" style="width: 14%;"></div>
@@ -239,28 +243,44 @@
 
             <!-- Soiling Risk Box -->
             <div class="ai-stat-box">
-              <div class="ai-stat-label">Soiling Risk Evaluation</div>
+              <div class="ai-stat-label">
+                Soiling Risk Evaluation
+                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
+                <span class="rule-based-badge" title="Threshold classifier: CRITICAL>55% / HIGH>35% / MEDIUM>20%">⚙ RULE-BASED</span>
+              </div>
               <div class="ai-stat-value" id="ai-soiling-risk" style="color: var(--status-normal);">LOW</div>
               <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Optical transmission: 94.3%</div>
             </div>
 
             <!-- Heat Loss Risk Box (Phase 2 Model) -->
             <div class="ai-stat-box">
-              <div class="ai-stat-label">Heat Derating Risk</div>
+              <div class="ai-stat-label">
+                Heat Derating Risk
+                <!-- Phase 8 – Risk 2: PRD §16 — real IEC 61215 formula, not ML -->
+                <span class="real-math-badge" title="IEC 61215: -0.4%/°C above 25°C STC baseline. Real physics formula.">∑ REAL MATH</span>
+              </div>
               <div class="ai-stat-value" id="ai-heat-risk" style="color: var(--status-normal);">MODERATE (-4.4%)</div>
               <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="ai-heat-derate">Cell Temp: ~42°C (-0.4%/°C)</div>
             </div>
 
             <!-- Fault Risk Box -->
             <div class="ai-stat-box">
-              <div class="ai-stat-label">Anomaly / Fault Detection</div>
+              <div class="ai-stat-label">
+                Anomaly / Fault Detection
+                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
+                <span class="rule-based-badge" title="Rule-based: compares actual vs expected output; classifies by injected fault type.">⚙ RULE-BASED</span>
+              </div>
               <div class="ai-stat-value" id="ai-fault-risk" style="color: var(--status-normal);">LOW</div>
               <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">String voltage balanced</div>
             </div>
 
             <!-- Cleaning Priority Box -->
             <div class="ai-stat-box">
-              <div class="ai-stat-label">Economic Cleaning Priority</div>
+              <div class="ai-stat-label">
+                Economic Cleaning Priority
+                <!-- Phase 8 – Risk 2: PRD §16 — real ROI formula -->
+                <span class="real-math-badge" title="ROI dispatch: dailyLossINR > cleaningCostINR. Real economic formula.">∑ REAL MATH</span>
+              </div>
               <div class="ai-stat-value" id="ai-cleaning-priority" style="font-size: 14px; color: var(--solar-gold);">STANDBY</div>
               <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="ai-revenue-loss">Loss: ₹450 / Threshold: ₹3,200</div>
             </div>

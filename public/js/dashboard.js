@@ -47,19 +47,25 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateLiveClock, 1000);
   updateLiveClock();
 
-  // 4. WebSocket Connection Status & Latency Indicator
-  farmStateManager.onConnectionChange((isConnected) => {
+  // 4. WebSocket Connection Status & Latency Indicator (Phase 8 – Risk 4: Venue Network Resilience)
+  farmStateManager.onConnectionChange((isConnected, reconnectAttempt, nextRetryMs) => {
     const syncBadge = document.getElementById('sync-badge');
     const syncText = document.getElementById('sync-status-text');
     const syncDot = document.getElementById('sync-dot-indicator');
+    const latencyEl = document.getElementById('sync-latency-text');
     if (isConnected) {
       syncBadge.className = 'badge cyan';
       syncText.innerText = 'SYNCED';
       if (syncDot) syncDot.className = 'status-dot info';
+      if (latencyEl) latencyEl.style.display = '';
     } else {
       syncBadge.className = 'badge rose';
-      syncText.innerText = 'RECONNECTING';
+      const retryLabel = reconnectAttempt > 0
+        ? `OFFLINE · RETRY #${reconnectAttempt}${nextRetryMs > 0 ? ' in ' + Math.round(nextRetryMs / 1000) + 's' : ''}`
+        : 'OFFLINE';
+      syncText.innerText = retryLabel;
       if (syncDot) syncDot.className = 'status-dot critical';
+      if (latencyEl) { latencyEl.innerText = '--ms'; latencyEl.style.display = ''; }
     }
   });
 

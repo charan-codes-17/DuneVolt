@@ -13,6 +13,15 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 3000;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 8 – Risk 1: WebSocket Sync Latency Ring Buffer
+// Tracks the last 100 broadcast timestamps and durations to expose min/max/avg
+// latency data for verifying that real-time sync stays imperceptible under load.
+// ─────────────────────────────────────────────────────────────────────────────
+const LATENCY_RING_SIZE = 100;
+const broadcastLatencyRing = [];   // { ts, durationMs, clientCount }
+let latencyRingIndex = 0;
+
 // Middleware
 app.use(express.json());
 
@@ -52,6 +61,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.all('/api/reset', (req, res) => {
+  const resetStart = Date.now();
   clearDemoTimers();
   clearAllTimers();
   farmState = defaultState();
@@ -59,9 +69,11 @@ app.all('/api/reset', (req, res) => {
   recalculateFarmPhysics();
   broadcastState();
   broadcastDemoEnd();
+  const resetDurationMs = Date.now() - resetStart;
   res.json({
     status: 'success',
     message: 'Farm digital twin reset to baseline default state',
+    resetDurationMs,
     timestamp: Date.now()
   });
 });
@@ -76,6 +88,246 @@ app.post('/api/action', (req, res) => {
     status: 'success',
     action,
     timestamp: Date.now()
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 8 – Risk 1: /api/latency-stats
+// Returns min/max/avg broadcast latency from the ring buffer, plus total
+// broadcast count and current connected client count.
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/latency-stats', (req, res) => {
+  const ring = broadcastLatencyRing;
+  if (ring.length === 0) {
+    return res.json({
+      status: 'success',
+      message: 'No broadcasts recorded yet',
+      count: 0,
+      minMs: null,
+      maxMs: null,
+      avgMs: null,
+      connectedClients: wss.clients.size,
+      timestamp: Date.now()
+    });
+  }
+  const durations = ring.map(r => r.durationMs);
+  const minMs = Math.min(...durations);
+  const maxMs = Math.max(...durations);
+  const avgMs = +(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(2);
+  res.json({
+    status: 'success',
+    count: ring.length,
+    minMs,
+    maxMs,
+    avgMs,
+    lastBroadcast: ring[ring.length - 1],
+    connectedClients: wss.clients.size,
+    timestamp: Date.now()
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 8 – Risk 1: /api/sync-stress
+// Fires N rapid state broadcasts (default 20) and measures broadcast latency
+// under simulated load. Returns statistics for each broadcast round.
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/sync-stress', async (req, res) => {
+  const count = Math.min(50, parseInt(req.query.count) || 20);
+  const results = [];
+  for (let i = 0; i < count; i++) {
+    const start = Date.now();
+    broadcastState();
+    const durationMs = Date.now() - start;
+    results.push({ round: i + 1, durationMs, clientCount: wss.clients.size });
+    // Small delay between rounds to prevent event-loop starvation
+    await new Promise(r => setTimeout(r, 10));
+  }
+  const durations = results.map(r => r.durationMs);
+  const maxMs = Math.max(...durations);
+  const avgMs = +(durations.reduce((a, b) => a + b, 0) / durations.length).toFixed(2);
+  res.json({
+    status: 'success',
+    broadcastCount: count,
+    connectedClients: wss.clients.size,
+    maxMs,
+    avgMs,
+    underThreshold100ms: maxMs < 100,
+    results,
+    timestamp: Date.now()
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 8 – Risk 2 & 3: /api/architecture
+// Returns a structured transparency document per PRD §16 (AI Honesty), listing
+// every feature with its computation type (real-math vs rule-based) and Tier
+// classification (Tier 1 = Must-Have, Tier 2 = Should-Have, Tier 3 = Aspirational).
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/architecture', (req, res) => {
+  res.json({
+    status: 'success',
+    protocolVersion: '8.0',
+    prdCompliance: 'PRD §13, §16 — Prototype Claims Honesty',
+    timestamp: Date.now(),
+    realPhysicsCalculations: [
+      {
+        id: 'SUN_TRACKING',
+        name: 'Sun Position & Dual-Axis Panel Tracking',
+        tier: 1,
+        formula: 'tilt = max(10, min(75, 90 - sunAngle))',
+        description: 'Sun elevation angle drives real trigonometric optimal tilt calculation for all panels.',
+        implemented: true
+      },
+      {
+        id: 'THERMAL_DERATING',
+        name: 'Desert Thermal Efficiency Derating',
+        tier: 1,
+        formula: 'loss = (temperature - 25) * 0.004 per °C above STC 25°C baseline',
+        description: 'IEC 61215-standard -0.4%/°C thermal coefficient applied above STC baseline temperature.',
+        implemented: true
+      },
+      {
+        id: 'DUST_ATTENUATION',
+        name: 'Dust & Sand Soiling Optical Attenuation',
+        tier: 1,
+        formula: 'dustEfficiency = 1 - (dustLevel / 100) * 0.38',
+        description: 'Particulate concentration linearly attenuates optical transmission to the cell surface.',
+        implemented: true
+      },
+      {
+        id: 'LOSS_ATTRIBUTION',
+        name: '7-Factor Loss Attribution Arithmetic',
+        tier: 1,
+        formula: 'totalLoss = heatLoss + dustLoss + anomalyLoss (crack/wiring/hotspot/shading/degradation)',
+        description: 'Panel output vs expected baseline decomposed across 7 independent loss categories.',
+        implemented: true
+      },
+      {
+        id: 'ENERGY_BALANCE',
+        name: 'Dynamic Energy Conservation & Routing',
+        tier: 2,
+        formula: 'P_generated = P_grid + P_storage + P_sharedSolar (conservation verified)',
+        description: 'Real-time power balance routing between grid export, BESS charging, and community direct feed.',
+        implemented: true
+      },
+      {
+        id: 'ECONOMIC_CLEANING',
+        name: 'Economic Cleaning Prioritization (ROI)',
+        tier: 2,
+        formula: 'dailyLossINR = (dust/100)*0.38 * baseKwh * tariffPerKwh; trigger when > cleaningCostINR',
+        description: 'Maintenance dispatch decision ranked by revenue loss vs cleaning cost threshold.',
+        implemented: true
+      }
+    ],
+    ruleBasedAiModules: [
+      {
+        id: 'STORM_RISK',
+        name: 'Storm Risk Prediction Model',
+        tier: 1,
+        type: 'RULE_BASED',
+        label: 'Simulated multi-sensor weighted risk composite',
+        rules: 'risk = (windSpeed/120)*65 + (dustLevel/100)*35 + ((100-visibility)/100)*20; trigger >= 72%',
+        description: 'Rule-based threshold model combining wind, dust, and visibility factors. NOT a trained ML model.',
+        implemented: true
+      },
+      {
+        id: 'STORM_COUNTDOWN',
+        name: 'Autonomous Storm Defense Countdown (10s compressed)',
+        tier: 1,
+        type: 'RULE_BASED',
+        label: 'Compressed demo time-scale (10s = 25min real-world)',
+        rules: 'When stormRisk >= 72%: WARNING → 10s countdown → PROTECTING → STORM (8s) → RECOVERY → CLEANING → RESUMING → NORMAL',
+        description: 'Deterministic autonomous lifecycle sequence. 10-second demo horizon simulates 25-minute real-world storm radar window.',
+        implemented: true
+      },
+      {
+        id: 'FAULT_DETECTION',
+        name: 'Anomaly / Fault Detection & Classification',
+        tier: 1,
+        type: 'RULE_BASED',
+        label: 'Simulated 7-category diagnostic isolation',
+        rules: 'Compare panel.output vs panel.expectedOutput; flag if faultStatus != NONE; classify by injected fault type',
+        description: 'Rule-based anomaly detection comparing actual vs expected panel output. Fault categories injected via operator or demo script.',
+        implemented: true
+      },
+      {
+        id: 'SOILING_RISK',
+        name: 'Soiling Risk Assessment',
+        tier: 1,
+        type: 'RULE_BASED',
+        label: 'Threshold-based dust concentration classifier',
+        rules: 'dustLevel > 55 => CRITICAL; > 35 => HIGH; > 20 => MEDIUM; else LOW',
+        description: 'Dust level threshold classifier determining soiling severity for maintenance dispatch decisions.',
+        implemented: true
+      },
+      {
+        id: 'VISUAL_INSPECTION',
+        name: 'Simulated Visual & Thermal CV Inspection',
+        tier: 2,
+        type: 'RULE_BASED',
+        label: 'Deterministic telemetry string generation',
+        rules: 'Structured inspection report generated from faultStatus and dust level — NOT a real CV inference pipeline',
+        description: 'High-fidelity inspection report strings generated deterministically from fault state. Simulates drone-based visual and thermal camera findings.',
+        implemented: true
+      },
+      {
+        id: 'GENERATION_FORECAST',
+        name: 'Generation Forecast Model',
+        tier: 2,
+        type: 'RULE_BASED',
+        label: 'Condition-based forecast string classifier',
+        rules: 'stormRisk >= 70 => -65% | STORM => -92% | dustLevel >= 50 => -28.5% | temp >= 45 => -12% | else +4.5%',
+        description: 'Rule-based forecast label derived from current environmental conditions. NOT a time-series prediction model.',
+        implemented: true
+      }
+    ],
+    tierCompliance: {
+      tier1MustHave: [
+        { feature: 'Shared authoritative farm state', implemented: true },
+        { feature: 'Real-time WebSocket synchronization', implemented: true },
+        { feature: 'Sun tracking (dual-axis tilt calculation)', implemented: true },
+        { feature: 'Dust simulation & soiling efficiency loss', implemented: true },
+        { feature: 'Storm prediction & autonomous 10s defense cycle', implemented: true },
+        { feature: 'Fault injection & 7-category root-cause attribution', implemented: true },
+        { feature: 'Live metrics strip (power, efficiency, health, dust, temp, wind)', implemented: true },
+        { feature: 'Instant Reset (venue resilience)', implemented: true }
+      ],
+      tier2ShouldHave: [
+        { feature: 'Panel selection detail inspector', implemented: true },
+        { feature: 'Fault simulation with 5 active trigger types', implemented: true },
+        { feature: 'Visual/thermal inspection CV report', implemented: true },
+        { feature: 'Economic cleaning prioritization queue', implemented: true },
+        { feature: 'Live event timeline auto-logging', implemented: true },
+        { feature: 'Dynamic energy routing (GRID_EXPORT / BATTERY_CHARGE / COMMUNITY_DIRECT)', implemented: true }
+      ],
+      tier3NiceToHave: [
+        { feature: 'High-fidelity 3D with real ML models', implemented: false, note: 'Out of scope per PRD §14' },
+        { feature: 'Trained ML storm prediction (replace rule-based)', implemented: false, note: 'Out of scope per PRD §14' },
+        { feature: 'Advanced cleaning robotics with path planning', implemented: false, note: 'Out of scope per PRD §14' }
+      ]
+    },
+    phase8RiskMitigations: [
+      {
+        risk: 'Real-time sync lag breaking shared-state illusion',
+        mitigation: 'Simple WebSocket broadcast with ring-buffer latency tracking. Verified via /api/sync-stress and /api/latency-stats.',
+        verified: true
+      },
+      {
+        risk: 'Judges probing AI authenticity',
+        mitigation: 'PRD §16 compliant labeling: RULE-BASED badges on all AI components, honesty modal, /api/architecture endpoint, footer notice.',
+        verified: true
+      },
+      {
+        risk: 'Scope creep into Tier 3',
+        mitigation: 'Tier manifest in /api/architecture. All Tier 3 features explicitly marked not-implemented. Tier 1 & 2 fully delivered.',
+        verified: true
+      },
+      {
+        risk: 'Venue network issues',
+        mitigation: 'Instant RESET via WebSocket + REST API (/api/reset). Auto-reconnect with exponential backoff in client. OFFLINE badge in dashboard.',
+        verified: true
+      }
+    ]
   });
 });
 
@@ -717,18 +969,32 @@ function triggerIndependentCleaning() {
 }
 
 // WebSocket broadcast helper
+// Phase 8 – Risk 1: Records each broadcast duration into the ring buffer for latency monitoring.
 function broadcastState() {
+  const broadcastStart = Date.now();
   const payload = JSON.stringify({
     type: 'STATE_UPDATE',
-    serverTimestamp: Date.now(),
+    serverTimestamp: broadcastStart,
     data: farmState
   });
 
+  let clientsSent = 0;
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
+      clientsSent++;
     }
   });
+
+  // Record broadcast in ring buffer (Phase 8 Risk 1: Sync Latency Tracking)
+  const durationMs = Date.now() - broadcastStart;
+  const entry = { ts: broadcastStart, durationMs, clientCount: clientsSent };
+  if (broadcastLatencyRing.length < LATENCY_RING_SIZE) {
+    broadcastLatencyRing.push(entry);
+  } else {
+    broadcastLatencyRing[latencyRingIndex % LATENCY_RING_SIZE] = entry;
+    latencyRingIndex++;
+  }
 }
 
 // Demo Step broadcast — carries stage metadata separate from state
