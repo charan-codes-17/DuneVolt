@@ -112,11 +112,33 @@
 
 ---
 
-## Phase 7 – Open Questions (to be answered by Product Owner)
+## Phase 7 – Open Questions & Product Architecture Resolutions (Implemented)
 
-- Which of the seven fault‑attribution categories will have active demo triggers?
-- Should the energy‑routing module be fully live or a static visual only?
-- Precise wording for the compressed storm countdown to stay honest yet punchy.
+### 7.1 Seven Fault-Attribution Categories (Active Demo Triggers)
+All seven fault-attribution categories named in the specification & PRD (§10.4 & §11) are fully implemented with active, live demoable triggers and distinct visual telemetry/inspection feedback:
+1. **Cell Hotspot (Thermal IR Anomaly)**: Active trigger via Controller dropdown → Injects localized substring hotspot, bypass diode alert, and emissivity variance.
+2. **Silicon Micro-Crack**: Active trigger via Controller dropdown → Injects silicon wafer micro-fracture, electroluminescence drop, and high-impedance derate.
+3. **String Connector Resistance / Loose MC4**: Active trigger via Controller dropdown → Injects DC terminal junction bloom and circuit continuity anomaly.
+4. **Localized Horizon Shading**: Active trigger via Controller dropdown → Injects sharp contrast optical shadow derating.
+5. **Cell EVA Polymer Degradation**: Active trigger via Controller dropdown → Injects photothermal polymer browning and UV transmission loss.
+6. **Dust & Sand Soiling**: Active trigger via "Simulate Soiling" button or Dust slider → Injects surface particulate derate, triggers economic cleaning prioritization queue.
+7. **Desert Thermal Derating**: Active trigger via Temperature slider (>25°C) → Computes live -0.4%/°C thermal loss derate and heat loss attribution.
+
+### 7.2 Live Dynamic Energy Routing Module
+- **Resolution**: Fully live and dynamically calculated in real time (not a static visual).
+- **Behavior**:
+  - Calculates live energy conservation: $P_{\text{generated}} = P_{\text{grid}} + P_{\text{storage}} + P_{\text{sharedSolar}}$.
+  - Dynamic tariff pricing tiers: **PEAK (₹9.2/kWh)** at >3.0 MW, **STANDARD (₹6.5/kWh)** at 1.2–3.0 MW, and **OFF-PEAK (₹4.2/kWh)** at low solar/night.
+  - Active route switching (`GRID_EXPORT`, `BATTERY_CHARGE`, `COMMUNITY_DIRECT` / BESS discharge) with real-time HUD path highlights and rural household delivery metrics.
+
+### 7.3 Honest & Punchy Storm Countdown Wording
+- **Resolution**: Clear, punchy wording compliant with PRD §16 (Honesty Guidelines) and PRD §10.3 (Autonomous Storm Cycle):
+  - **Banner Title**: `"AI EARLY STORM WARNING"`
+  - **Banner Tag**: `"COMPRESSED DEMO HORIZON (10s = 25m REAL-WORLD)"`
+  - **Alert Description**: `"Severe wind & dust front detected. Autonomous defensive array stow initiated."`
+  - **Countdown Label**: `"STOW IN [X]s"`
+  - **Event Log**: `"AI Storm Early Warning: Risk evaluated at [X]%. 10-second compressed protective countdown initiated."`
+  - **Controller Subtitle**: `"High wind front, 10s AI warning & defensive stow (fast demo cycle)"`
 
 ---
 

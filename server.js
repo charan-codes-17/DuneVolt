@@ -490,6 +490,16 @@ function recalculateFarmPhysics() {
         baselineComparison: '-31.0% optical transmission differential',
         summary: '⚠️ Localized structural shadow detected. Partial string derate.'
       };
+    } else if (panel.faultStatus === 'DEGRADATION') {
+      panel.visualInspection = {
+        crack: 'Not detected',
+        discoloration: '⚠️ Yellowing / browning of EVA encapsulant polymer',
+        contamination: 'UV photochemical browning',
+        looseComponents: 'Not detected',
+        sandBuildup: `${panel.dust}% surface coverage`,
+        baselineComparison: '-16.4% transmission loss (EVA Polymer Aging)',
+        summary: '⚠️ Photothermal EVA degradation detected. Substring output derated.'
+      };
     } else {
       panel.visualInspection = {
         crack: 'Not detected',

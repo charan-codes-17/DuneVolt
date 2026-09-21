@@ -83,12 +83,21 @@ document.addEventListener('DOMContentLoaded', () => {
     flashButton(btnSimulateDust);
   });
 
+  const selectFaultPanel = document.getElementById('select-fault-panel');
   const selectFaultType = document.getElementById('select-fault-type');
   const ctrlLatency = document.getElementById('ctrl-latency');
 
   btnInjectFault.addEventListener('click', () => {
+    const selectedPanelId = selectFaultPanel ? selectFaultPanel.value : 'PV-02';
     const selectedType = selectFaultType ? selectFaultType.value : 'HOTSPOT';
-    farmStateManager.createFault(selectedType);
+
+    // If selected panel is already faulted, clear it; otherwise inject selected fault type
+    const currentFaulted = farmStateManager.state?.panels?.find(p => p.id === selectedPanelId && p.faultStatus !== 'NONE');
+    if (currentFaulted) {
+      farmStateManager.setFault(selectedPanelId, 'NONE');
+    } else {
+      farmStateManager.setFault(selectedPanelId, selectedType);
+    }
     flashButton(btnInjectFault);
   });
 
@@ -144,12 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
       modeBadge.style.color = '#06b6d4';
     }
 
-    const faultedPanel = panels.find(p => p.faultStatus !== 'NONE');
-    if (faultedPanel) {
-      btnFaultTitle.innerText = `Clear [${faultedPanel.faultStatus}]`;
+    const selectedPanelId = selectFaultPanel ? selectFaultPanel.value : 'PV-02';
+    const targetFaulted = panels.find(p => p.id === selectedPanelId && p.faultStatus !== 'NONE');
+    const anyFaulted = panels.find(p => p.faultStatus !== 'NONE');
+
+    if (targetFaulted) {
+      btnFaultTitle.innerText = `Clear ${selectedPanelId} [${targetFaulted.faultStatus}]`;
       btnInjectFault.style.borderColor = '#ef4444';
+    } else if (anyFaulted) {
+      btnFaultTitle.innerText = `Inject ${selectedPanelId} (Clear ${anyFaulted.id})`;
+      btnInjectFault.style.borderColor = '#f59e0b';
     } else {
-      btnFaultTitle.innerText = 'Inject Array Fault';
+      btnFaultTitle.innerText = `Inject ${selectedPanelId} Fault`;
       btnInjectFault.style.borderColor = 'rgba(168, 85, 247, 0.4)';
     }
 

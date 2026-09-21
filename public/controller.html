@@ -124,17 +124,27 @@
           <button class="action-btn fault" id="btn-inject-fault">
             <div class="action-btn-icon">⚠️</div>
             <div class="action-btn-title" id="btn-fault-title">Inject Array Fault</div>
-            <div class="action-btn-desc">Triggers anomaly & loss attribution on PV-02</div>
+            <div class="action-btn-desc" id="btn-fault-desc">Triggers anomaly & loss attribution on selected array</div>
           </button>
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
-            <label for="select-fault-type" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Category:</label>
-            <select id="select-fault-type" style="background: #0f172a; color: #e2e8f0; border: 1px solid var(--border-glass); border-radius: 4px; font-size: 11px; padding: 3px 6px;">
-              <option value="HOTSPOT">Cell Hotspot (IR Anomaly)</option>
-              <option value="CRACK">Physical Micro-Crack</option>
-              <option value="WIRING">String Connector Resistance</option>
-              <option value="SHADING">Localized Horizon Shading</option>
-              <option value="DEGRADATION">Cell EVA Degradation</option>
-            </select>
+          <div style="display: flex; gap: 6px;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+              <label for="select-fault-panel" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Array:</label>
+              <select id="select-fault-panel" style="background: #0f172a; color: #e2e8f0; border: 1px solid var(--border-glass); border-radius: 4px; font-size: 11px; padding: 3px 6px;">
+                <option value="PV-01">PV-01 (West)</option>
+                <option value="PV-02" selected>PV-02 (Center)</option>
+                <option value="PV-03">PV-03 (East)</option>
+              </select>
+            </div>
+            <div style="flex: 1.5; display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+              <label for="select-fault-type" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Type:</label>
+              <select id="select-fault-type" style="background: #0f172a; color: #e2e8f0; border: 1px solid var(--border-glass); border-radius: 4px; font-size: 11px; padding: 3px 6px;">
+                <option value="HOTSPOT">Cell Hotspot</option>
+                <option value="CRACK">Wafer Crack</option>
+                <option value="WIRING">MC4 Wiring</option>
+                <option value="SHADING">Shading</option>
+                <option value="DEGRADATION">EVA Degradation</option>
+              </select>
+            </div>
           </div>
         </div>
 
