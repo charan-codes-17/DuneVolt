@@ -283,9 +283,13 @@
         <!-- Selected Panel Inspector -->
         <div class="panel-inspector-card glass-panel" id="panel-inspector">
           <div class="inspector-header">
-            <div>
-              <span class="badge cyan" id="insp-id">PV-02</span>
-              <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px;" id="insp-name">Sector A - Array 02</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div class="panel-selector-tabs" id="panel-selector-tabs">
+                <button class="panel-tab" data-panel-id="PV-01">PV-01</button>
+                <button class="panel-tab active" data-panel-id="PV-02">PV-02</button>
+                <button class="panel-tab" data-panel-id="PV-03">PV-03</button>
+              </div>
+              <span style="font-size: 11px; color: var(--text-secondary);" id="insp-name">Sector A - Array 02</span>
             </div>
             <span class="badge emerald" id="insp-health">NORMAL</span>
           </div>

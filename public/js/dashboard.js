@@ -26,6 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // 2b. Panel Selector Tabs Listeners
+  const panelTabs = document.querySelectorAll('.panel-tab');
+  panelTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const panelId = tab.getAttribute('data-panel-id');
+      if (panelId) {
+        currentSelectedPanelId = panelId;
+        if (scene) {
+          scene.selectPanel(panelId);
+        }
+        if (farmStateManager.state) {
+          updatePanelInspector(farmStateManager.state);
+        }
+      }
+    });
+  });
+
   // 3. Live Clock (IST & UTC)
   setInterval(updateLiveClock, 1000);
   updateLiveClock();
@@ -284,8 +301,20 @@ function updatePanelInspector(state) {
   const panel = state.panels.find(p => p.id === currentSelectedPanelId) || state.panels[0];
   if (!panel) return;
 
-  document.getElementById('insp-id').innerText = panel.id;
-  document.getElementById('insp-name').innerText = panel.name;
+  // Update panel selector tabs active state
+  const panelTabs = document.querySelectorAll('.panel-tab');
+  panelTabs.forEach(tab => {
+    if (tab.getAttribute('data-panel-id') === panel.id) {
+      tab.classList.add('active');
+    } else {
+      tab.classList.remove('active');
+    }
+  });
+
+  const inspIdEl = document.getElementById('insp-id');
+  if (inspIdEl) inspIdEl.innerText = panel.id;
+  const inspNameEl = document.getElementById('insp-name');
+  if (inspNameEl) inspNameEl.innerText = panel.name;
 
   const healthBadge = document.getElementById('insp-health');
   if (panel.faultStatus && panel.faultStatus !== 'NONE') {

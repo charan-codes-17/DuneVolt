@@ -40,11 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  updateSliderBadges();
+
   function updateSliderBadges() {
     badgeSun.innerText = `${sliderSun.value}°`;
     badgeDust.innerText = `${sliderDust.value}%`;
     badgeWind.innerText = `${sliderWind.value} km/h`;
     badgeTemp.innerText = `${sliderTemp.value}°C`;
+
+    updateSliderGradients();
+  }
+
+  function updateSliderGradients() {
+    const sunPct = ((sliderSun.value - sliderSun.min) / (sliderSun.max - sliderSun.min)) * 100;
+    const dustPct = ((sliderDust.value - sliderDust.min) / (sliderDust.max - sliderDust.min)) * 100;
+    const windPct = ((sliderWind.value - sliderWind.min) / (sliderWind.max - sliderWind.min)) * 100;
+    const tempPct = ((sliderTemp.value - sliderTemp.min) / (sliderTemp.max - sliderTemp.min)) * 100;
+
+    sliderSun.style.background = `linear-gradient(to right, #f59e0b 0%, #fbbf24 ${sunPct}%, #1e293b ${sunPct}%, #1e293b 100%)`;
+    sliderDust.style.background = `linear-gradient(to right, #d97706 0%, #b45309 ${dustPct}%, #1e293b ${dustPct}%, #1e293b 100%)`;
+    sliderWind.style.background = `linear-gradient(to right, #06b6d4 0%, #3b82f6 ${windPct}%, #1e293b ${windPct}%, #1e293b 100%)`;
+    sliderTemp.style.background = `linear-gradient(to right, #ef4444 0%, #f43f5e ${tempPct}%, #1e293b ${tempPct}%, #1e293b 100%)`;
   }
 
   function dispatchEnvironmentChange() {
