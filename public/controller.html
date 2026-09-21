@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DuneVolt — Operator Simulation Controller</title>
+  <meta name="description" content="Mobile-first operator controller to manipulate environmental inputs and trigger autonomous responses for DuneVolt solar farm.">
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/controller.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+</head>
+<body>
+
+  <div class="controller-wrapper">
+    <!-- Header -->
+    <header class="controller-header glass-panel">
+      <div class="controller-brand">
+        <div class="ctrl-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3" stroke="#fff" stroke-width="2"></line>
+            <line x1="12" y1="21" x2="12" y2="23" stroke="#fff" stroke-width="2"></line>
+          </svg>
+        </div>
+        <div>
+          <h1 class="ctrl-title">DUNEVOLT</h1>
+          <div class="ctrl-role">Operator Simulation Controller</div>
+        </div>
+      </div>
+      <a href="/" target="_blank" class="view-dashboard-btn">🖥️ View Dashboard</a>
+    </header>
+
+    <!-- Synchronized Live Telemetry Summary -->
+    <div class="sync-bar glass-panel">
+      <div class="sync-status">
+        <span class="status-dot" id="ctrl-sync-dot"></span>
+        <span id="ctrl-sync-label">CONNECTED</span>
+        <span class="mono-val" id="ctrl-latency" style="font-size: 10px; color: var(--text-muted); margin-left: 2px;">--ms</span>
+      </div>
+      <div class="ctrl-mode-badge" id="ctrl-mode-badge" style="color: var(--status-normal);">
+        NORMAL OPERATION
+      </div>
+      <div class="mono-val" style="color: var(--solar-gold);">
+        <span id="ctrl-total-power">4.82</span> MW
+      </div>
+    </div>
+
+    <!-- Section 1: Environmental Condition Sliders -->
+    <section class="sliders-card glass-panel">
+      <div class="card-heading">
+        <span>☀️ Environmental Manipulators</span>
+        <span style="font-size: 10px; color: var(--text-muted);">REAL-TIME SYNC</span>
+      </div>
+
+      <!-- Sun Angle Slider -->
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label class="slider-label" for="slider-sun">
+            <span>☀️ Sun Elevation</span>
+          </label>
+          <span class="slider-val-badge" id="badge-sun">50°</span>
+        </div>
+        <input type="range" id="slider-sun" class="touch-slider" min="10" max="90" value="50" step="1">
+      </div>
+
+      <!-- Dust Level Slider -->
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label class="slider-label" for="slider-dust">
+            <span>🌫️ Atmospheric Dust</span>
+          </label>
+          <span class="slider-val-badge" id="badge-dust">15%</span>
+        </div>
+        <input type="range" id="slider-dust" class="touch-slider" min="0" max="100" value="15" step="1">
+      </div>
+
+      <!-- Wind Speed Slider -->
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label class="slider-label" for="slider-wind">
+            <span>💨 Wind Velocity</span>
+          </label>
+          <span class="slider-val-badge" id="badge-wind">18 km/h</span>
+        </div>
+        <input type="range" id="slider-wind" class="touch-slider" min="0" max="120" value="18" step="1">
+      </div>
+
+      <!-- Temperature Slider -->
+      <div class="slider-group">
+        <div class="slider-label-row">
+          <label class="slider-label" for="slider-temp">
+            <span>🌡️ Ambient Temperature</span>
+          </label>
+          <span class="slider-val-badge" id="badge-temp">36°C</span>
+        </div>
+        <input type="range" id="slider-temp" class="touch-slider" min="20" max="55" value="36" step="1">
+      </div>
+    </section>
+
+    <!-- Section 2: Autonomous One-Tap Triggers -->
+    <section class="actions-card glass-panel">
+      <div class="card-heading">
+        <span>⚡ Autonomous Scenario Triggers</span>
+        <span style="font-size: 10px; color: var(--solar-gold);">ONE-TAP DEMO</span>
+      </div>
+
+      <div class="action-buttons-grid">
+        <!-- Simulate Sandstorm -->
+        <button class="action-btn storm" id="btn-simulate-storm">
+          <div class="action-btn-icon">🌪️</div>
+          <div class="action-btn-title">Simulate Sandstorm</div>
+          <div class="action-btn-desc">High wind front, 10s AI warning & defensive stow</div>
+        </button>
+
+        <!-- Simulate Soiling / Dust -->
+        <button class="action-btn dust" id="btn-simulate-dust">
+          <div class="action-btn-icon">🧹</div>
+          <div class="action-btn-title">Simulate Soiling</div>
+          <div class="action-btn-desc">Spikes dust, triggers waterless dry-brush sweep</div>
+        </button>
+
+        <!-- Inject Panel Fault -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <button class="action-btn fault" id="btn-inject-fault">
+            <div class="action-btn-icon">⚠️</div>
+            <div class="action-btn-title" id="btn-fault-title">Inject Array Fault</div>
+            <div class="action-btn-desc">Triggers anomaly & loss attribution on PV-02</div>
+          </button>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: rgba(0, 0, 0, 0.3); border-radius: var(--radius-sm); border: 1px solid var(--border-glass);">
+            <label for="select-fault-type" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Category:</label>
+            <select id="select-fault-type" style="background: #0f172a; color: #e2e8f0; border: 1px solid var(--border-glass); border-radius: 4px; font-size: 11px; padding: 3px 6px;">
+              <option value="HOTSPOT">Cell Hotspot (IR Anomaly)</option>
+              <option value="CRACK">Physical Micro-Crack</option>
+              <option value="WIRING">String Connector Resistance</option>
+              <option value="SHADING">Localized Horizon Shading</option>
+              <option value="DEGRADATION">Cell EVA Degradation</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dispatch Cleaning Robot -->
+        <button class="action-btn" id="btn-trigger-cleaning" style="border-color: rgba(6, 182, 212, 0.4); background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(15, 23, 42, 0.9));">
+          <div class="action-btn-icon">🤖</div>
+          <div class="action-btn-title">Dispatch Robot</div>
+          <div class="action-btn-desc">Dry-brush carriage sweeps active array</div>
+        </button>
+
+        <!-- Emergency Demo Reset -->
+        <button class="action-btn reset" id="btn-reset">
+          <span style="font-size: 18px;">🔄</span>
+          <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <span style="font-weight: 700; font-size: 13px;">Instant Demo Reset</span>
+            <span style="font-size: 10px; color: var(--text-muted);">Restores all baseline environmental variables and panels</span>
+          </div>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Application Logic -->
+  <script type="module" src="/js/controller.js"></script>
+</body>
+</html>

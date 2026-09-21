@@ -1,0 +1,276 @@
+/* DuneVolt Operator Controller (Mobile-First Touch UI) */
+
+body {
+  background-color: #06080d;
+}
+
+.controller-wrapper {
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 16px 16px 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+/* Controller Header */
+.controller-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+
+.controller-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ctrl-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--solar-amber), #d97706);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctrl-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.ctrl-role {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--solar-gold);
+  font-weight: 600;
+}
+
+.view-dashboard-btn {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.view-dashboard-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Live Synchronized Telemetry Strip */
+.sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-glass);
+  font-size: 12px;
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ctrl-mode-badge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+/* Environmental Sliders Section */
+.sliders-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-heading {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slider-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-val-badge {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-glass);
+  color: var(--solar-gold);
+}
+
+/* Touch Friendly Sliders */
+.touch-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: #1e293b;
+  outline: none;
+  border: 1px solid var(--border-glass);
+  transition: background 0.2s;
+}
+
+.touch-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--solar-amber-glow);
+  border: 2px solid #ffffff;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.touch-slider::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  box-shadow: 0 0 18px var(--solar-amber);
+}
+
+/* Quick Action Triggers */
+.actions-card {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px 16px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-height: 86px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+}
+
+.action-btn-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.action-btn-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.action-btn-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Button Variants */
+.action-btn.storm {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(15, 23, 42, 0.9));
+}
+.action-btn.storm:hover {
+  border-color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.dust {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.9));
+}
+.action-btn.dust:hover {
+  border-color: var(--solar-amber);
+  box-shadow: 0 0 15px var(--solar-amber-glow);
+}
+
+.action-btn.fault {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(15, 23, 42, 0.9));
+}
+.action-btn.fault:hover {
+  border-color: #a855f7;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+}
+
+.action-btn.reset {
+  grid-column: span 2;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  min-height: 52px;
+  padding: 10px;
+}
+
+.action-btn.reset:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #fff;
+}
