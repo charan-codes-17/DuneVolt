@@ -1,4 +1,4 @@
-﻿import { WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 
 const WS_URL = 'ws://localhost:3000';
 
@@ -21,6 +21,16 @@ async function runVerification() {
   console.log('Connected to DuneVolt on ws://localhost:3000');
   console.log('Starting Phase 5 Demo Script Verification\n');
 
+  let latestState = null;
+  ws.on('message', (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === 'STATE_UPDATE' || msg.type === 'INITIAL_STATE') {
+        latestState = msg.data;
+      }
+    } catch (e) { }
+  });
+
   function sendAction(action, payload) {
     payload = payload || {};
     ws.send(JSON.stringify({ action, payload }));
@@ -29,6 +39,9 @@ async function runVerification() {
   function waitForState(predicate, timeoutMs, description) {
     timeoutMs = timeoutMs || 8000;
     description = description || 'state update';
+    if (latestState && predicate(latestState)) {
+      return Promise.resolve(latestState);
+    }
     return new Promise((resolve, reject) => {
       let resolved = false;
       const handler = (data) => {

@@ -51,21 +51,55 @@ document.addEventListener('DOMContentLoaded', () => {
   farmStateManager.onConnectionChange((isConnected) => {
     const syncBadge = document.getElementById('sync-badge');
     const syncText = document.getElementById('sync-status-text');
+    const syncDot = document.getElementById('sync-dot-indicator');
     if (isConnected) {
       syncBadge.className = 'badge cyan';
       syncText.innerText = 'SYNCED';
+      if (syncDot) syncDot.className = 'status-dot info';
     } else {
       syncBadge.className = 'badge rose';
       syncText.innerText = 'RECONNECTING';
+      if (syncDot) syncDot.className = 'status-dot critical';
     }
   });
 
   farmStateManager.onLatencyChange((rtt) => {
     const latencyEl = document.getElementById('sync-latency-text');
+    const syncBadge = document.getElementById('sync-badge');
     if (latencyEl) {
       latencyEl.innerText = `${rtt}ms`;
     }
+    if (syncBadge && farmStateManager.isConnected) {
+      if (rtt < 25) {
+        syncBadge.className = 'badge emerald';
+      } else if (rtt < 90) {
+        syncBadge.className = 'badge cyan';
+      } else {
+        syncBadge.className = 'badge amber';
+      }
+    }
   });
+
+  // 4b. Phase 6: 3D Scene FPS Tracking & Quality Mode Toggle
+  if (scene) {
+    const fpsValEl = document.getElementById('hud-fps-val');
+    scene.setFpsCallback((fps, qualityMode) => {
+      if (fpsValEl) {
+        fpsValEl.innerText = fps;
+        fpsValEl.style.color = fps >= 45 ? '#10b981' : (fps >= 25 ? '#f59e0b' : '#ef4444');
+      }
+    });
+
+    const btnToggleQuality = document.getElementById('btn-toggle-quality');
+    if (btnToggleQuality) {
+      btnToggleQuality.addEventListener('click', () => {
+        const nextMode = scene.qualityMode === 'HIGH' ? 'SAVER' : 'HIGH';
+        scene.setQualityMode(nextMode);
+        btnToggleQuality.innerText = nextMode === 'HIGH' ? 'HQ' : 'SAVER';
+        btnToggleQuality.classList.toggle('active-saver', nextMode === 'SAVER');
+      });
+    }
+  }
 
   // 5. Subscribe to Authoritative Shared State
   farmStateManager.subscribe((state) => {
@@ -76,10 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 6. Phase 5: Demo Mode — button wiring & overlay
+  // 6. Phase 5 & 6: Demo Mode & Instant Reset Wiring
   const btnStartDemo = document.getElementById('btn-start-demo');
   const btnStopDemo = document.getElementById('btn-stop-demo');
-  const demoOverlay = document.getElementById('demo-overlay');
+  const btnHeaderReset = document.getElementById('btn-header-reset');
 
   if (btnStartDemo) {
     btnStartDemo.addEventListener('click', () => {
@@ -95,6 +129,71 @@ document.addEventListener('DOMContentLoaded', () => {
       farmStateManager.stopDemo();
     });
   }
+
+  if (btnHeaderReset) {
+    btnHeaderReset.addEventListener('click', () => {
+      farmStateManager.reset();
+      flashHeaderReset();
+    });
+  }
+
+  // Hotkey: Shift + R for Instant System Reset (PRD §10.10)
+  window.addEventListener('keydown', (e) => {
+    if (e.shiftKey && (e.key === 'R' || e.key === 'r')) {
+      e.preventDefault();
+      farmStateManager.reset();
+      flashHeaderReset();
+    }
+  });
+
+  function flashHeaderReset() {
+    if (btnHeaderReset) {
+      btnHeaderReset.style.transform = 'scale(0.92)';
+      btnHeaderReset.style.borderColor = '#10b981';
+      setTimeout(() => {
+        btnHeaderReset.style.transform = '';
+        btnHeaderReset.style.borderColor = '';
+      }, 250);
+    }
+  }
+
+  // 7. Phase 6: Architecture & Honesty Guide Modal Wiring
+  const honestyModal = document.getElementById('modal-honesty');
+  const btnOpenHonestyHeader = document.getElementById('btn-honesty-guide');
+  const btnOpenHonestyFooter = document.getElementById('btn-open-honesty-footer');
+  const btnCloseHonesty = document.getElementById('btn-close-honesty-modal');
+  const btnAckHonesty = document.getElementById('btn-ack-honesty');
+
+  function openHonestyModal() {
+    if (honestyModal) {
+      honestyModal.classList.add('visible');
+      honestyModal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeHonestyModal() {
+    if (honestyModal) {
+      honestyModal.classList.remove('visible');
+      honestyModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  if (btnOpenHonestyHeader) btnOpenHonestyHeader.addEventListener('click', openHonestyModal);
+  if (btnOpenHonestyFooter) btnOpenHonestyFooter.addEventListener('click', openHonestyModal);
+  if (btnCloseHonesty) btnCloseHonesty.addEventListener('click', closeHonestyModal);
+  if (btnAckHonesty) btnAckHonesty.addEventListener('click', closeHonestyModal);
+
+  if (honestyModal) {
+    honestyModal.addEventListener('click', (e) => {
+      if (e.target === honestyModal) closeHonestyModal();
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && honestyModal && honestyModal.classList.contains('visible')) {
+      closeHonestyModal();
+    }
+  });
 
   farmStateManager.onDemoStep((demoData) => {
     updateDemoOverlay(demoData);

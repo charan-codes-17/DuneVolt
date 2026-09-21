@@ -28,6 +28,14 @@ export class SolarFarmScene {
     this.currentStormIntensity = 0;
     this.activeOperatingMode = 'NORMAL';
 
+    // Performance & FPS Tracking (Phase 6)
+    this.qualityMode = 'HIGH'; // 'HIGH' | 'SAVER'
+    this.fps = 60;
+    this.frameCount = 0;
+    this.lastFpsTime = performance.now();
+    this.onFpsUpdateCallback = null;
+    this.resizeObserver = null;
+
     this.init();
   }
 
@@ -45,14 +53,31 @@ export class SolarFarmScene {
     this.updateCameraPosition();
 
     // 3. Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: this.qualityMode === 'HIGH',
+      alpha: false,
+      powerPreference: 'high-performance'
+    });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.setPixelRatio(this.qualityMode === 'HIGH' ? Math.min(window.devicePixelRatio, 2) : 1);
+    this.renderer.shadowMap.enabled = this.qualityMode === 'HIGH';
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
-    this.container.appendChild(this.renderer.domElement);
+
+    // WebGL Context Loss Recovery
+    const domEl = this.renderer.domElement;
+    domEl.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      console.warn('[3D] WebGL Context Lost — pausing render loop');
+    }, false);
+
+    domEl.addEventListener('webglcontextrestored', () => {
+      console.info('[3D] WebGL Context Restored — reinitializing shaders');
+      this.onWindowResize();
+    }, false);
+
+    this.container.appendChild(domEl);
 
     // 4. Lighting
     this.ambientLight = new THREE.AmbientLight(0x8eb3df, 0.65);
@@ -62,7 +87,7 @@ export class SolarFarmScene {
     this.scene.add(hemiLight);
 
     this.sunLight = new THREE.DirectionalLight(0xfff4e0, 2.2);
-    this.sunLight.castShadow = true;
+    this.sunLight.castShadow = this.qualityMode === 'HIGH';
     this.sunLight.shadow.mapSize.width = 2048;
     this.sunLight.shadow.mapSize.height = 2048;
     this.sunLight.shadow.camera.near = 1;
@@ -94,8 +119,13 @@ export class SolarFarmScene {
     // 8. Waterless Cleaning Robot
     this.createCleaningRobot();
 
-    // 9. Event Listeners
+    // 9. Event Listeners & ResizeObserver
     this.setupInteractions();
+
+    if (window.ResizeObserver && this.container) {
+      this.resizeObserver = new ResizeObserver(() => this.onWindowResize());
+      this.resizeObserver.observe(this.container);
+    }
 
     // 10. Start Render Loop
     this.animate = this.animate.bind(this);
@@ -600,6 +630,41 @@ export class SolarFarmScene {
       posAttr.needsUpdate = true;
     }
 
+    // FPS and Performance Calculation (Phase 6)
+    this.frameCount++;
+    const now = performance.now();
+    const elapsed = now - this.lastFpsTime;
+    if (elapsed >= 500) {
+      this.fps = Math.round((this.frameCount * 1000) / elapsed);
+      this.frameCount = 0;
+      this.lastFpsTime = now;
+      if (this.onFpsUpdateCallback) {
+        this.onFpsUpdateCallback(this.fps, this.qualityMode);
+      }
+    }
+
     this.renderer.render(this.scene, this.camera);
+  }
+
+  setFpsCallback(callback) {
+    this.onFpsUpdateCallback = callback;
+  }
+
+  setQualityMode(mode) {
+    if (mode !== 'HIGH' && mode !== 'SAVER') return;
+    this.qualityMode = mode;
+    if (!this.renderer) return;
+
+    if (mode === 'SAVER') {
+      this.renderer.setPixelRatio(1.0);
+      this.renderer.shadowMap.enabled = false;
+      if (this.sunLight) this.sunLight.castShadow = false;
+      if (this.stormParticles) this.stormParticles.material.size = 0.12;
+    } else {
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      this.renderer.shadowMap.enabled = true;
+      if (this.sunLight) this.sunLight.castShadow = true;
+      if (this.stormParticles) this.stormParticles.material.size = 0.18;
+    }
   }
 }

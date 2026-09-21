@@ -211,6 +211,44 @@ class FarmStateManager {
   stopDemo() {
     this.sendAction('DEMO_STOP');
   }
+
+  // Phase 6 REST Fallback & Diagnostic Helpers
+  async fetchStateRest() {
+    try {
+      const res = await fetch('/api/state');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && data.state) {
+        this.state = data.state;
+        this.notifyListeners(this.state);
+      }
+      return data;
+    } catch (e) {
+      console.warn('[StateSync] REST state fetch failed:', e);
+      return null;
+    }
+  }
+
+  async fetchHealthRest() {
+    try {
+      const res = await fetch('/api/health');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      console.warn('[StateSync] REST health fetch failed:', e);
+      return null;
+    }
+  }
+
+  async resetRest() {
+    try {
+      const res = await fetch('/api/reset', { method: 'POST' });
+      return await res.json();
+    } catch (e) {
+      console.warn('[StateSync] REST reset failed:', e);
+      return null;
+    }
+  }
 }
 
 export const farmStateManager = new FarmStateManager();

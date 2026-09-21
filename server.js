@@ -13,6 +13,9 @@ const wss = new WebSocketServer({ server });
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware
+app.use(express.json());
+
 // Serve vendor assets (Three.js)
 app.use('/vendor/three', express.static(path.join(__dirname, 'node_modules', 'three', 'build')));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,6 +27,56 @@ app.get('/dashboard', (req, res) => {
 
 app.get('/controller', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'controller.html'));
+});
+
+// Phase 6 REST API Endpoints for testing, external telemetry, & resilience
+app.get('/api/state', (req, res) => {
+  res.json({
+    status: 'success',
+    serverTimestamp: Date.now(),
+    state: farmState
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    uptimeSeconds: Math.floor(process.uptime()),
+    connectedClients: wss.clients.size,
+    activeTimers: activeTimers.length + demoTimers.length,
+    demoActive,
+    operatingMode: farmState.farm.operatingMode,
+    memoryUsageMB: +(process.memoryUsage().rss / (1024 * 1024)).toFixed(2),
+    timestamp: Date.now()
+  });
+});
+
+app.all('/api/reset', (req, res) => {
+  clearDemoTimers();
+  clearAllTimers();
+  farmState = defaultState();
+  addEvent('INFO', 'System Reset (via REST API): Restored to pristine baseline defaults.');
+  recalculateFarmPhysics();
+  broadcastState();
+  broadcastDemoEnd();
+  res.json({
+    status: 'success',
+    message: 'Farm digital twin reset to baseline default state',
+    timestamp: Date.now()
+  });
+});
+
+app.post('/api/action', (req, res) => {
+  const { action, payload } = req.body || {};
+  if (!action) {
+    return res.status(400).json({ error: 'Missing action parameter' });
+  }
+  handleClientAction({ action, payload }, null);
+  res.json({
+    status: 'success',
+    action,
+    timestamp: Date.now()
+  });
 });
 
 // Authoritative Farm State
@@ -657,6 +710,7 @@ function triggerIndependentCleaning() {
 function broadcastState() {
   const payload = JSON.stringify({
     type: 'STATE_UPDATE',
+    serverTimestamp: Date.now(),
     data: farmState
   });
 
@@ -860,6 +914,7 @@ wss.on('connection', (ws) => {
   // Send immediate initial state
   ws.send(JSON.stringify({
     type: 'INITIAL_STATE',
+    serverTimestamp: Date.now(),
     data: farmState
   }));
 
@@ -992,10 +1047,12 @@ function handleClientAction(msg, ws) {
       // Instant recovery to baseline defaults
       clearDemoTimers();
       clearAllTimers();
+      demoActive = false;
       farmState = defaultState();
       addEvent('INFO', 'System Reset: All environmental variables and solar arrays restored to baseline.');
       recalculateFarmPhysics();
       broadcastState();
+      broadcastDemoEnd();
       break;
     }
 
