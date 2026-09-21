@@ -11,6 +11,7 @@ class FarmStateManager {
     this.isConnected = false;
     this.connectionStatusListeners = [];
     this.latencyListeners = [];
+    this.demoListeners = [];
     this.latency = 0;
     this.heartbeatTimer = null;
     this.initWebSocket();
@@ -41,6 +42,8 @@ class FarmStateManager {
             const rtt = Math.max(1, Date.now() - (message.clientTimestamp || Date.now()));
             this.latency = rtt;
             this.notifyLatency(rtt);
+          } else if (message.type === 'DEMO_STEP') {
+            this.notifyDemoListeners(message.data);
           }
         } catch (err) {
           console.error('[StateSync] Failed to parse message', err);
@@ -154,6 +157,24 @@ class FarmStateManager {
     }
   }
 
+  // Demo step subscription
+  onDemoStep(callback) {
+    this.demoListeners.push(callback);
+    return () => {
+      this.demoListeners = this.demoListeners.filter(cb => cb !== callback);
+    };
+  }
+
+  notifyDemoListeners(demoData) {
+    for (const cb of this.demoListeners) {
+      try {
+        cb(demoData);
+      } catch (err) {
+        console.error('[StateSync] Demo listener error', err);
+      }
+    }
+  }
+
   // Operator Action Helpers
   setEnvironment(envUpdates) {
     this.sendAction('SET_ENVIRONMENT', envUpdates);
@@ -181,6 +202,14 @@ class FarmStateManager {
 
   reset() {
     this.sendAction('RESET');
+  }
+
+  startDemo() {
+    this.sendAction('DEMO_RUN');
+  }
+
+  stopDemo() {
+    this.sendAction('DEMO_STOP');
   }
 }
 

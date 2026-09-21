@@ -50,6 +50,11 @@
           <span class="mono-val" id="sync-latency-text" style="font-size: 10px; margin-left: 3px; opacity: 0.85;">--ms</span>
         </div>
         <div class="mono-val" id="live-clock" style="color: var(--text-secondary); font-size: 13px;">--:--:-- IST</div>
+        <!-- Phase 5: Demo Launch Button -->
+        <button id="btn-start-demo" class="demo-launch-btn" title="Start the guided 3-minute autonomy demonstration">
+          <span class="demo-btn-icon">🎬</span>
+          <span>Start Demo</span>
+        </button>
         <a href="/controller" target="_blank" class="controller-link-btn" title="Open Mobile Controller in separate window/tab">
           <span>🎮 Operator Controller</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
@@ -429,6 +434,52 @@
         </div>
       </aside>
     </main>
+  </div>
+
+  <!-- Phase 5: Demo Progress Overlay Bar -->
+  <div id="demo-overlay" class="demo-overlay" aria-hidden="true">
+    <div class="demo-overlay-inner">
+      <!-- Left: stage chip + narration -->
+      <div class="demo-left">
+        <div class="demo-stage-chip">
+          <span class="demo-film-icon">🎬</span>
+          <span class="demo-label">DEMO MODE</span>
+        </div>
+        <div class="demo-stage-info">
+          <div class="demo-stage-name" id="demo-stage-name">Stage 1: Normal Operation</div>
+          <div class="demo-narration" id="demo-narration">Initializing demo sequence...</div>
+        </div>
+      </div>
+
+      <!-- Center: step dots + progress bar -->
+      <div class="demo-center">
+        <div class="demo-step-dots" id="demo-step-dots">
+          <span class="demo-dot" data-step="1"></span>
+          <span class="demo-dot" data-step="2"></span>
+          <span class="demo-dot" data-step="3"></span>
+          <span class="demo-dot" data-step="4"></span>
+          <span class="demo-dot" data-step="5"></span>
+        </div>
+        <div class="demo-progress-track">
+          <div class="demo-progress-bar" id="demo-progress-bar"></div>
+        </div>
+        <div class="demo-step-label" id="demo-step-label">Step 1 / 5</div>
+      </div>
+
+      <!-- Right: stop button -->
+      <div class="demo-right">
+        <div class="demo-timer-ring">
+          <svg viewBox="0 0 44 44" class="demo-ring-svg">
+            <circle cx="22" cy="22" r="18" class="demo-ring-bg"/>
+            <circle cx="22" cy="22" r="18" class="demo-ring-fill" id="demo-ring-fill"/>
+          </svg>
+          <span class="demo-ring-label" id="demo-ring-label">1/5</span>
+        </div>
+        <button id="btn-stop-demo" class="demo-stop-btn" title="Stop demo and reset">
+          <span>■ Stop</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Application Logic -->

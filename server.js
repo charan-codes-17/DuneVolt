@@ -188,10 +188,18 @@ const defaultState = () => ({
 
 let farmState = defaultState();
 let activeTimers = [];
+let demoActive = false;
+let demoTimers = [];
 
 function clearAllTimers() {
   activeTimers.forEach(t => clearTimeout(t));
   activeTimers = [];
+}
+
+function clearDemoTimers() {
+  demoTimers.forEach(t => clearTimeout(t));
+  demoTimers = [];
+  demoActive = false;
 }
 
 function getFormattedTime() {
@@ -659,6 +667,195 @@ function broadcastState() {
   });
 }
 
+// Demo Step broadcast — carries stage metadata separate from state
+function broadcastDemoStep(stepIndex, stageName, narration, totalSteps) {
+  const payload = JSON.stringify({
+    type: 'DEMO_STEP',
+    data: {
+      stepIndex,
+      stageName,
+      narration,
+      totalSteps,
+      active: true
+    }
+  });
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+}
+
+function broadcastDemoEnd() {
+  const payload = JSON.stringify({
+    type: 'DEMO_STEP',
+    data: { active: false, stepIndex: 0, stageName: '', narration: '', totalSteps: 5 }
+  });
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 5 – Guided 3-Minute Demo Script
+// Stages: Normal → Dust Event → Storm → Fault Injection → Energy Flow Finale
+// ─────────────────────────────────────────────────────────────────────────────
+function runDemoScript() {
+  if (demoActive) return; // Already running
+  clearAllTimers();
+  clearDemoTimers();
+
+  // Clean slate
+  farmState = defaultState();
+  recalculateFarmPhysics();
+  demoActive = true;
+
+  const TOTAL_STEPS = 5;
+
+  function demoTimeout(fn, delay) {
+    const t = setTimeout(fn, delay);
+    demoTimers.push(t);
+    return t;
+  }
+
+  // ── Stage 1: Normal Operation (0s – 12s) ───────────────────────────────────
+  broadcastDemoStep(1, 'Stage 1: Normal Operation', 'Optimal sun conditions. Dual-axis trackers aligned. All arrays generating at peak capacity.', TOTAL_STEPS);
+  addEvent('INFO', '🎬 DEMO START — Stage 1: Normal Operation. Trackers aligned to solar noon.');
+  farmState.environment.sunAngle = 72;
+  farmState.environment.dustLevel = 10;
+  farmState.environment.windSpeed = 12;
+  farmState.environment.temperature = 34;
+  recalculateFarmPhysics();
+  broadcastState();
+
+  demoTimeout(() => {
+    farmState.environment.sunAngle = 60;
+    recalculateFarmPhysics();
+    addEvent('INFO', 'Demo: Sun arc progressing — panel tilt adjusting autonomously.');
+    broadcastState();
+  }, 5000);
+
+  demoTimeout(() => {
+    farmState.environment.sunAngle = 50;
+    recalculateFarmPhysics();
+    broadcastState();
+  }, 9000);
+
+  // ── Stage 2: Dust Event (12s – 42s) ────────────────────────────────────────
+  demoTimeout(() => {
+    if (!demoActive) return;
+    broadcastDemoStep(2, 'Stage 2: Dust Event', 'Desert dust storm front detected. Soiling loss triggers autonomous condition-based dry-brush robotic cleaning dispatch.', TOTAL_STEPS);
+    farmState.environment.dustLevel = 72;
+    farmState.environment.windSpeed = 28;
+    recalculateFarmPhysics();
+    addEvent('WARNING', '🎬 Demo Stage 2: Dust Event — Soiling concentration elevated to 72%. Array output degrading.');
+    broadcastState();
+  }, 12000);
+
+  demoTimeout(() => {
+    if (!demoActive) return;
+    addEvent('ACTION', 'Demo: AI Soiling Risk elevated to CRITICAL. Economic loss threshold exceeded. Waterless dry-brush robot dispatched.');
+    triggerIndependentCleaning();
+  }, 18000);
+
+  // Stage 2 ends naturally when cleaning completes (~30s from trigger, ~48s total)
+  // We schedule Stage 3 at 52s to give cleaning time to complete
+
+  // ── Stage 3: Storm Event (52s – 97s) ───────────────────────────────────────
+  demoTimeout(() => {
+    if (!demoActive) return;
+    // Ensure we're back to normal before triggering storm
+    if (farmState.farm.operatingMode !== 'NORMAL') {
+      clearAllTimers();
+      farmState = defaultState();
+      farmState.environment.dustLevel = 10;
+      recalculateFarmPhysics();
+    }
+    broadcastDemoStep(3, 'Stage 3: Storm Event', 'Extreme wind front approaching. AI storm risk model fires early warning. Autonomous countdown → array stow → sandstorm → recovery chain begins.', TOTAL_STEPS);
+    farmState.environment.windSpeed = 95;
+    farmState.environment.dustLevel = 68;
+    farmState.environment.visibility = 58;
+    recalculateFarmPhysics();
+    addEvent('WARNING', '🎬 Demo Stage 3: Storm Event — Extreme 95 km/h wind front. AI risk model: CRITICAL.');
+    startStormDefenseSequence();
+  }, 52000);
+
+  // ── Stage 4: Fault Injection (97s – 117s) ──────────────────────────────────
+  // Storm recovery completes ~30s after start of storm sequence = ~82s
+  // We wait until 97s to inject fault (giving RESUMING → NORMAL time)
+  demoTimeout(() => {
+    if (!demoActive) return;
+    broadcastDemoStep(4, 'Stage 4: Fault Injection', 'Simulating hotspot anomaly on PV-02. AI root-cause attribution isolates thermal substring fault. Diagnosis panel active.', TOTAL_STEPS);
+    // Ensure environment is calm for fault demo
+    farmState.environment.windSpeed = 15;
+    farmState.environment.dustLevel = 14;
+    farmState.environment.temperature = 36;
+    if (farmState.farm.operatingMode !== 'NORMAL') {
+      clearAllTimers();
+      farmState.farm.operatingMode = 'NORMAL';
+      farmState.farm.activeAlert = null;
+      farmState.prediction.countdown = null;
+    }
+    const pv2 = farmState.panels.find(p => p.id === 'PV-02');
+    if (pv2) pv2.faultStatus = 'HOTSPOT';
+    recalculateFarmPhysics();
+    addEvent('CRITICAL', '🎬 Demo Stage 4: Fault Injection — HOTSPOT anomaly injected on PV-02. Thermal IR deviation: +43°C above baseline.');
+    broadcastState();
+  }, 97000);
+
+  demoTimeout(() => {
+    if (!demoActive) return;
+    addEvent('INFO', 'Demo: PV-02 fault diagnosis complete. Root-cause: Localized Cell Hotspot (substring #4). Bypass diode engaged.');
+    broadcastState();
+  }, 107000);
+
+  demoTimeout(() => {
+    if (!demoActive) return;
+    const pv2 = farmState.panels.find(p => p.id === 'PV-02');
+    if (pv2) pv2.faultStatus = 'NONE';
+    recalculateFarmPhysics();
+    addEvent('SUCCESS', 'Demo: PV-02 anomaly cleared. Array telemetry returned to nominal. Generation fully restored.');
+    broadcastState();
+  }, 113000);
+
+  // ── Stage 5: Energy Flow Finale (117s – 132s) ───────────────────────────────
+  demoTimeout(() => {
+    if (!demoActive) return;
+    broadcastDemoStep(5, 'Stage 5: Energy Flow Finale', 'Peak generation achieved. Autonomous routing: 65% to grid, 23% battery storage, 12% shared solar to rural households.', TOTAL_STEPS);
+    farmState.environment.sunAngle = 80;
+    farmState.environment.dustLevel = 10;
+    farmState.environment.windSpeed = 10;
+    farmState.environment.temperature = 32;
+    farmState.farm.operatingMode = 'NORMAL';
+    farmState.farm.activeAlert = null;
+    const pv2 = farmState.panels.find(p => p.id === 'PV-02');
+    if (pv2) pv2.faultStatus = 'NONE';
+    recalculateFarmPhysics();
+    addEvent('SUCCESS', '🎬 Demo Stage 5: Energy Flow Finale — Peak output. AI routing: GRID_EXPORT active. Rural community shared solar live.');
+    broadcastState();
+  }, 117000);
+
+  demoTimeout(() => {
+    if (!demoActive) return;
+    addEvent('INFO', 'Demo: Energy routing telemetry — Grid: ' +
+      farmState.energy.grid.toFixed(2) + 'MW | Storage: ' +
+      farmState.energy.storage.toFixed(2) + 'MW | Shared Solar: ' +
+      farmState.energy.sharedSolar.toFixed(2) + 'MW');
+    broadcastState();
+  }, 123000);
+
+  // ── Demo Complete (132s) ────────────────────────────────────────────────────
+  demoTimeout(() => {
+    if (!demoActive) return;
+    demoActive = false;
+    addEvent('SUCCESS', '🎬 DEMO COMPLETE — Full autonomous sense→predict→protect→recover→route cycle verified.');
+    broadcastState();
+    broadcastDemoEnd();
+  }, 132000);
+}
+
 wss.on('connection', (ws) => {
   // Send immediate initial state
   ws.send(JSON.stringify({
@@ -772,8 +969,28 @@ function handleClientAction(msg, ws) {
       break;
     }
 
+    case 'DEMO_RUN': {
+      // Phase 5: Start the guided 3-minute demo script
+      runDemoScript();
+      break;
+    }
+
+    case 'DEMO_STOP': {
+      // Phase 5: Abort demo and reset
+      clearDemoTimers();
+      clearAllTimers();
+      demoActive = false;
+      farmState = defaultState();
+      addEvent('INFO', 'Demo stopped. System reset to baseline.');
+      recalculateFarmPhysics();
+      broadcastState();
+      broadcastDemoEnd();
+      break;
+    }
+
     case 'RESET': {
       // Instant recovery to baseline defaults
+      clearDemoTimers();
       clearAllTimers();
       farmState = defaultState();
       addEvent('INFO', 'System Reset: All environmental variables and solar arrays restored to baseline.');

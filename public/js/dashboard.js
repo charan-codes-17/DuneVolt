@@ -75,6 +75,30 @@ document.addEventListener('DOMContentLoaded', () => {
       scene.updateFromState(state);
     }
   });
+
+  // 6. Phase 5: Demo Mode — button wiring & overlay
+  const btnStartDemo = document.getElementById('btn-start-demo');
+  const btnStopDemo = document.getElementById('btn-stop-demo');
+  const demoOverlay = document.getElementById('demo-overlay');
+
+  if (btnStartDemo) {
+    btnStartDemo.addEventListener('click', () => {
+      if (btnStartDemo.classList.contains('demo-running')) return;
+      farmStateManager.startDemo();
+      btnStartDemo.classList.add('demo-running');
+      btnStartDemo.querySelector('span:last-child').innerText = 'Demo Running…';
+    });
+  }
+
+  if (btnStopDemo) {
+    btnStopDemo.addEventListener('click', () => {
+      farmStateManager.stopDemo();
+    });
+  }
+
+  farmStateManager.onDemoStep((demoData) => {
+    updateDemoOverlay(demoData);
+  });
 });
 
 function updateLiveClock() {
@@ -415,4 +439,70 @@ function updateEventTimeline(events) {
       <span class="timeline-msg">${ev.message}</span>
     </div>
   `).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 5 – Demo Overlay Updater
+// Receives DEMO_STEP data and updates all overlay UI elements
+// ─────────────────────────────────────────────────────────────────────────────
+function updateDemoOverlay(demoData) {
+  const overlay = document.getElementById('demo-overlay');
+  const btnStart = document.getElementById('btn-start-demo');
+  if (!overlay) return;
+
+  if (!demoData.active) {
+    // Demo ended or stopped
+    overlay.classList.remove('visible');
+    if (btnStart) {
+      btnStart.classList.remove('demo-running');
+      btnStart.querySelector('span:last-child').innerText = 'Start Demo';
+    }
+    return;
+  }
+
+  // Show the overlay
+  overlay.classList.add('visible');
+
+  const { stepIndex, stageName, narration, totalSteps } = demoData;
+
+  // Stage name & narration
+  const stageNameEl = document.getElementById('demo-stage-name');
+  const narrationEl = document.getElementById('demo-narration');
+  if (stageNameEl) stageNameEl.innerText = stageName;
+  if (narrationEl) narrationEl.innerText = narration;
+
+  // Step label
+  const stepLabelEl = document.getElementById('demo-step-label');
+  if (stepLabelEl) stepLabelEl.innerText = `Step ${stepIndex} / ${totalSteps}`;
+
+  // Ring label
+  const ringLabelEl = document.getElementById('demo-ring-label');
+  if (ringLabelEl) ringLabelEl.innerText = `${stepIndex}/${totalSteps}`;
+
+  // Progress bar (percentage of steps completed)
+  const progressBar = document.getElementById('demo-progress-bar');
+  if (progressBar) {
+    const pct = ((stepIndex - 1) / totalSteps) * 100;
+    progressBar.style.width = `${pct}%`;
+  }
+
+  // SVG ring fill (stroke-dashoffset: 113 = 0%, 0 = 100%)
+  const ringFill = document.getElementById('demo-ring-fill');
+  if (ringFill) {
+    const circumference = 113;
+    const filled = ((stepIndex - 1) / totalSteps) * circumference;
+    ringFill.style.strokeDashoffset = `${circumference - filled}`;
+  }
+
+  // Step dots
+  const dots = document.querySelectorAll('.demo-dot');
+  dots.forEach(dot => {
+    const step = parseInt(dot.getAttribute('data-step'), 10);
+    dot.classList.remove('active', 'done');
+    if (step < stepIndex) {
+      dot.classList.add('done');
+    } else if (step === stepIndex) {
+      dot.classList.add('active');
+    }
+  });
 }
