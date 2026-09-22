@@ -67,6 +67,11 @@ app.get('/api/state', (req, res) => {
   });
 });
 
+// Minimal health check endpoint for Render deployment
+app.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',

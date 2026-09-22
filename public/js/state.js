@@ -18,12 +18,11 @@ class FarmStateManager {
   }
 
   initWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}`;
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
     try {
-      this.socket = new WebSocket(wsUrl);
+      const ws = new WebSocket(`${proto}//${window.location.host}`);
+      this.socket = ws;
 
       this.socket.onopen = () => {
         this.isConnected = true;
