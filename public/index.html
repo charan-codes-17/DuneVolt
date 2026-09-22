@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DuneVolt — Autonomous Desert Solar Farm Digital Twin</title>
-  <meta name="description" content="Real-time synchronized digital twin of an autonomous desert solar farm featuring AI storm prediction, dynamic tracking, waterless cleaning, and energy routing.">
+  <meta name="description" content="Real-time 3D synchronized digital twin of an autonomous desert solar farm featuring AI storm prediction, dynamic tracking, waterless cleaning, and energy routing.">
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>">
@@ -12,62 +12,27 @@
 <body>
 
   <div class="dashboard-container">
-    <!-- Header -->
-    <header class="dashboard-header glass-panel">
-      <div class="brand-section">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="12" y1="21" x2="12" y2="23" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="1" y1="12" x2="3" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="21" y1="12" x2="23" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="#fff" stroke-width="2" stroke-linecap="round"></line>
-          </svg>
-        </div>
-        <div>
-          <h1 class="brand-title">DUNEVOLT</h1>
-          <div class="brand-subtitle">Autonomous Desert Solar Farm • Digital Twin</div>
-        </div>
+    <!-- Minimal Top Bar (No container / background box) -->
+    <header class="minimal-top-bar">
+      <!-- Left: Link to Operations & Diagnostics -->
+      <div class="top-bar-left">
+        <a href="/operations" class="minimal-nav-btn" title="Open AI Operations, Root-Cause Loss Attribution & Grid Telemetry">
+          <span>📊 Operations</span>
+        </a>
       </div>
 
-      <!-- Center System State Badge -->
-      <div class="header-status-center">
-        <div id="system-status-pill" class="system-status-pill">
-          <span class="status-dot pulsing" id="status-dot"></span>
-          <span id="system-status-text">SYSTEM NORMAL</span>
-        </div>
+      <!-- Center: DuneVolt Brand -->
+      <div class="top-bar-center">
+        <h1 class="minimal-brand-title">
+          <span class="minimal-brand-sun">☀️</span>
+          <span>DUNEVOLT</span>
+        </h1>
       </div>
 
-      <!-- Right Controls -->
-      <div class="header-right">
-        <div class="badge cyan" id="sync-badge" title="Live WebSocket Synchronization Latency">
-          <span class="status-dot info" id="sync-dot-indicator"></span>
-          <span id="sync-status-text">SYNCED</span>
-          <span class="mono-val" id="sync-latency-text" style="font-size: 10px; margin-left: 3px; opacity: 0.9;">--ms</span>
-        </div>
-        <div class="mono-val" id="live-clock" style="color: var(--text-secondary); font-size: 13px;">--:--:-- IST</div>
-        
-        <!-- Phase 6: Architecture & Honesty Guide Modal Trigger -->
-        <button id="btn-honesty-guide" class="guide-trigger-btn" title="Inspect Prototype Architecture & Real vs Rule-Based AI Split (PRD §13/§16)">
-          <span>🔬 Tech & Honesty Guide</span>
-        </button>
-
-        <!-- Phase 6: Instant Resilience Reset Button -->
-        <button id="btn-header-reset" class="header-reset-btn" title="Instant Demo Reset (Hotkey: Shift + R)">
-          <span>🔄 Reset</span>
-        </button>
-
-        <!-- Phase 5: Demo Launch Button -->
-        <button id="btn-start-demo" class="demo-launch-btn" title="Start the guided 3-minute autonomy demonstration">
-          <span class="demo-btn-icon">🎬</span>
-          <span>Start Demo</span>
-        </button>
-        <a href="/controller" target="_blank" class="controller-link-btn" title="Open Mobile Controller in separate window/tab">
-          <span>🎮 Controller</span>
+      <!-- Right: Controllers Link Button -->
+      <div class="top-bar-right">
+        <a href="/controller" target="_blank" class="minimal-controller-btn" title="Open Mobile Controller in separate window/tab">
+          <span>🎮 Controllers</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         </a>
       </div>
@@ -167,437 +132,90 @@
       </div>
     </section>
 
-    <!-- Main Workspace Grid -->
-    <main class="main-grid">
-      <!-- Left Column: 3D Monitor + AI Operations -->
-      <div class="left-column">
-        <!-- 3D Live Farm Monitor -->
-        <div class="monitor-container glass-panel">
-          <div id="webgl-canvas-container"></div>
+    <!-- Main 3D Model Stage -->
+    <main class="main-3d-stage">
+      <div class="monitor-container glass-panel">
+        <div id="webgl-canvas-container"></div>
 
-          <!-- Top HUD Overlay -->
-          <div class="monitor-hud">
-            <div class="hud-chips">
-              <div class="hud-chip">
-                <span>☀️ Sun Elevation:</span>
-                <span class="mono-val" id="hud-sun-angle" style="color: var(--solar-gold);">50°</span>
-              </div>
-              <div class="hud-chip">
-                <span>🔄 Tracking Tilt:</span>
-                <span class="mono-val" id="hud-panel-tilt" style="color: var(--ai-cyan);">40°</span>
-              </div>
-              <div class="hud-chip">
-                <span>🛡️ Mode:</span>
-                <span class="mono-val" id="hud-farm-mode" style="color: var(--status-normal);">AUTONOMOUS TRACKING</span>
-              </div>
-              <!-- Phase 6 Performance HUD Chip -->
-              <div class="hud-chip perf-chip" id="hud-fps-chip" title="3D WebGL Rendering Performance (PRD §12)">
-                <span>⚡ 3D:</span>
-                <span class="mono-val" id="hud-fps-val" style="color: #10b981;">60</span> <span style="font-size: 10px; color: var(--text-muted);">FPS</span>
-                <button id="btn-toggle-quality" class="hud-quality-toggle" title="Toggle 3D Quality (High / Laptop Power Saver)">HQ</button>
-              </div>
+        <!-- Top HUD Overlay -->
+        <div class="monitor-hud">
+          <div class="hud-chips">
+            <div class="hud-chip">
+              <span>☀️ Sun Elevation:</span>
+              <span class="mono-val" id="hud-sun-angle" style="color: var(--solar-gold);">50°</span>
             </div>
+            <div class="hud-chip">
+              <span>🔄 Tracking Tilt:</span>
+              <span class="mono-val" id="hud-panel-tilt" style="color: var(--ai-cyan);">40°</span>
+            </div>
+            <div class="hud-chip">
+              <span>🛡️ Mode:</span>
+              <span class="mono-val" id="hud-farm-mode" style="color: var(--status-normal);">AUTONOMOUS TRACKING</span>
+            </div>
+            <!-- Performance HUD Chip -->
+            <div class="hud-chip perf-chip" id="hud-fps-chip" title="3D WebGL Rendering Performance (PRD §12)">
+              <span>⚡ 3D:</span>
+              <span class="mono-val" id="hud-fps-val" style="color: #10b981;">60</span> <span style="font-size: 10px; color: var(--text-muted);">FPS</span>
+              <button id="btn-toggle-quality" class="hud-quality-toggle" title="Toggle 3D Quality (High / Laptop Power Saver)">HQ</button>
+            </div>
+          </div>
 
-            <!-- Camera View Presets -->
-            <div class="camera-controls">
+          <!-- Camera View Presets & Panel Tabs -->
+          <div class="camera-controls">
+            <div class="panel-selector-tabs" id="panel-selector-tabs">
+              <button class="panel-tab" data-panel-id="PV-01">PV-01</button>
+              <button class="panel-tab active" data-panel-id="PV-02">PV-02</button>
+              <button class="panel-tab" data-panel-id="PV-03">PV-03</button>
+            </div>
+            <div class="cam-preset-buttons">
               <button class="cam-btn active" id="btn-cam-overview" data-cam="overview">Overview</button>
               <button class="cam-btn" id="btn-cam-closeup" data-cam="closeup">Array Close-up</button>
               <button class="cam-btn" id="btn-cam-side" data-cam="side">Profile</button>
             </div>
           </div>
+        </div>
 
-          <!-- Bottom HUD Overlay -->
-          <div class="monitor-bottom-hud">
-            <div class="click-hint">
-              <span>💡 Interactive: Click any solar array to inspect real-time telemetry</span>
+        <!-- Selected Array Floating Mini HUD Card (Top Right / Bottom Floating) -->
+        <div class="array-floating-hud glass-panel" id="array-floating-hud">
+          <div class="array-floating-header">
+            <span class="array-id-pill" id="insp-id-badge">PV-02</span>
+            <span class="array-name-text" id="insp-name">Sector A - Array 02</span>
+            <span class="badge emerald" id="insp-health" style="font-size: 9px;">OPTIMAL</span>
+          </div>
+          <div class="array-floating-metrics">
+            <div class="floating-metric-item">
+              <span class="floating-k">Output:</span>
+              <span class="floating-v" style="color: var(--solar-gold);"><span id="insp-output">1.61</span> MW</span>
             </div>
-            <div class="hud-chip" id="hud-cleaning-chip" style="display: none; background: rgba(6, 182, 212, 0.2); border-color: var(--ai-cyan);">
-              <span>🧹 Waterless Dry-Brush Robotic Sweep: <span id="hud-cleaning-pct">0</span>%</span>
+            <div class="floating-metric-item">
+              <span class="floating-k">Expected:</span>
+              <span class="floating-v"><span id="insp-expected">1.64</span> MW</span>
+            </div>
+            <div class="floating-metric-item">
+              <span class="floating-k">Dust:</span>
+              <span class="floating-v" id="insp-dust">15%</span>
+            </div>
+            <div class="floating-metric-item">
+              <span class="floating-k">Temp:</span>
+              <span class="floating-v" id="insp-temp">39°C</span>
             </div>
           </div>
         </div>
 
-        <!-- AI Operations & Loss Diagnostics Panel -->
-        <div class="ai-ops-card glass-panel">
-          <div class="section-title-row">
-            <h2 class="section-title">
-              <span class="status-dot info"></span>
-              AI Supervisory & Predictive Operations
-            </h2>
-            <div class="badge cyan">PROTOTYPE REASONING ENGINE</div>
+        <!-- Bottom HUD Overlay -->
+        <div class="monitor-bottom-hud">
+          <div class="click-hint">
+            <span>💡 Interactive: Click or drag any solar array in 3D to inspect real-time telemetry</span>
           </div>
-
-          <div class="ai-ops-grid">
-            <!-- Storm Risk Box -->
-            <div class="ai-stat-box">
-              <div class="ai-stat-label">
-                Storm Risk Model
-                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
-                <span class="rule-based-badge" title="Rule-based threshold model. NOT a trained ML model.">⚙ RULE-BASED</span>
-              </div>
-              <div class="ai-stat-value" id="ai-storm-risk">14%</div>
-              <div class="risk-progress-bar">
-                <div class="risk-progress-fill" id="storm-risk-bar" style="width: 14%;"></div>
-              </div>
-            </div>
-
-            <!-- Soiling Risk Box -->
-            <div class="ai-stat-box">
-              <div class="ai-stat-label">
-                Soiling Risk Evaluation
-                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
-                <span class="rule-based-badge" title="Threshold classifier: CRITICAL>55% / HIGH>35% / MEDIUM>20%">⚙ RULE-BASED</span>
-              </div>
-              <div class="ai-stat-value" id="ai-soiling-risk" style="color: var(--status-normal);">LOW</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Optical transmission: 94.3%</div>
-            </div>
-
-            <!-- Heat Loss Risk Box (Phase 2 Model) -->
-            <div class="ai-stat-box">
-              <div class="ai-stat-label">
-                Heat Derating Risk
-                <!-- Phase 8 – Risk 2: PRD §16 — real IEC 61215 formula, not ML -->
-                <span class="real-math-badge" title="IEC 61215: -0.4%/°C above 25°C STC baseline. Real physics formula.">∑ REAL MATH</span>
-              </div>
-              <div class="ai-stat-value" id="ai-heat-risk" style="color: var(--status-normal);">MODERATE (-4.4%)</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="ai-heat-derate">Cell Temp: ~42°C (-0.4%/°C)</div>
-            </div>
-
-            <!-- Fault Risk Box -->
-            <div class="ai-stat-box">
-              <div class="ai-stat-label">
-                Anomaly / Fault Detection
-                <!-- Phase 8 – Risk 2: PRD §16 AI Honesty Label -->
-                <span class="rule-based-badge" title="Rule-based: compares actual vs expected output; classifies by injected fault type.">⚙ RULE-BASED</span>
-              </div>
-              <div class="ai-stat-value" id="ai-fault-risk" style="color: var(--status-normal);">LOW</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">String voltage balanced</div>
-            </div>
-
-            <!-- Cleaning Priority Box -->
-            <div class="ai-stat-box">
-              <div class="ai-stat-label">
-                Economic Cleaning Priority
-                <!-- Phase 8 – Risk 2: PRD §16 — real ROI formula -->
-                <span class="real-math-badge" title="ROI dispatch: dailyLossINR > cleaningCostINR. Real economic formula.">∑ REAL MATH</span>
-              </div>
-              <div class="ai-stat-value" id="ai-cleaning-priority" style="font-size: 14px; color: var(--solar-gold);">STANDBY</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;" id="ai-revenue-loss">Loss: ₹450 / Threshold: ₹3,200</div>
-            </div>
+          <div class="hud-chip" id="hud-shield-chip" style="display: none; background: rgba(245, 158, 11, 0.2); border-color: var(--status-warning);">
+            <span>🛡️ Ballistic Deflector Armor: <span id="hud-shield-val" style="color: #fbbf24; font-weight: 700;">LOCKED (100%)</span></span>
           </div>
-
-          <!-- Root Cause Loss Attribution Bar -->
-          <div class="attribution-card">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
-              <span style="color: var(--text-secondary); font-weight: 600;">Generation Loss Attribution Analysis (Farm)</span>
-              <span class="mono-val" style="color: var(--text-muted);">Expected: <span id="attr-expected" style="color: var(--text-primary);">4.92 MW</span> | Actual: <span id="attr-actual" style="color: var(--solar-gold);">4.82 MW</span></span>
-            </div>
-
-            <div class="attribution-bar-container">
-              <div class="bar-segment nominal" id="bar-nominal" style="width: 90%;" title="Effective Generation"></div>
-              <div class="bar-segment dust" id="bar-dust" style="width: 6%;" title="Dust Soiling Loss"></div>
-              <div class="bar-segment temp" id="bar-temp" style="width: 4%;" title="Thermal Efficiency Loss"></div>
-              <div class="bar-segment anomaly" id="bar-anomaly" style="width: 0%;" title="Hardware Anomaly Loss"></div>
-            </div>
-
-            <div class="attribution-legend">
-              <div class="legend-item"><span class="legend-dot" style="background: #10b981;"></span> Nominal Generation (<span id="pct-nominal">90</span>%)</div>
-              <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> Dust Soiling (<span id="pct-dust">6</span>%)</div>
-              <div class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span> Thermal Derate (<span id="pct-temp">4</span>%)</div>
-              <div class="legend-item" id="legend-anomaly-item" style="display: none;"><span class="legend-dot" style="background: #a855f7;"></span> Hardware Anomaly (<span id="pct-anomaly">0</span>%)</div>
-            </div>
-          </div>
-
-          <!-- Prioritized Economic Cleaning Queue (PRD §10.6 & §11) -->
-          <div class="cleaning-queue-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); font-weight: 600;">
-                Prioritized Maintenance Queue (Ranked by Economic Loss)
-              </div>
-              <span class="badge amber" style="font-size: 9px;">DISPATCH THRESHOLD: ₹450</span>
-            </div>
-            <div class="cleaning-queue-table" id="cleaning-queue-table">
-              <!-- Populated dynamically -->
-            </div>
+          <div class="hud-chip" id="hud-cleaning-chip" style="display: none; background: rgba(6, 182, 212, 0.2); border-color: var(--ai-cyan);">
+            <span>🧹 Waterless Dry-Brush Robotic Sweep: <span id="hud-cleaning-pct">0</span>%</span>
           </div>
         </div>
       </div>
-
-      <!-- Right Column: Panel Detail, Energy Flow, Timeline -->
-      <aside class="right-column">
-        <!-- Selected Panel Inspector -->
-        <div class="panel-inspector-card glass-panel" id="panel-inspector">
-          <div class="inspector-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div class="panel-selector-tabs" id="panel-selector-tabs">
-                <button class="panel-tab" data-panel-id="PV-01">PV-01</button>
-                <button class="panel-tab active" data-panel-id="PV-02">PV-02</button>
-                <button class="panel-tab" data-panel-id="PV-03">PV-03</button>
-              </div>
-              <span style="font-size: 11px; color: var(--text-secondary);" id="insp-name">Sector A - Array 02</span>
-            </div>
-            <span class="badge emerald" id="insp-health">NORMAL</span>
-          </div>
-
-          <div class="inspector-grid">
-            <div class="inspector-item">
-              <div class="inspector-item-label">Array Output</div>
-              <div class="inspector-item-val" style="color: var(--solar-gold);"><span id="insp-output">1.61</span> MW</div>
-            </div>
-            <div class="inspector-item">
-              <div class="inspector-item-label">Expected Output</div>
-              <div class="inspector-item-val"><span id="insp-expected">1.64</span> MW</div>
-            </div>
-            <div class="inspector-item">
-              <div class="inspector-item-label">Surface Dust</div>
-              <div class="inspector-item-val" id="insp-dust">15%</div>
-            </div>
-            <div class="inspector-item">
-              <div class="inspector-item-label">Operating Temp</div>
-              <div class="inspector-item-val" id="insp-temp">39°C</div>
-            </div>
-            <div class="inspector-item">
-              <div class="inspector-item-label">Last Cleaned</div>
-              <div class="inspector-item-val" style="font-size: 11px;" id="insp-last-cleaned">18 Sep 2026</div>
-            </div>
-            <div class="inspector-item">
-              <div class="inspector-item-label">Next Cleaning</div>
-              <div class="inspector-item-val" style="font-size: 11px;" id="insp-next-cleaned">23 Sep 2026</div>
-            </div>
-          </div>
-
-          <!-- 7-Factor Loss Attribution (PRD §10.4 & §11) -->
-          <div class="panel-factor-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 10px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Root-Cause Loss Attribution</span>
-              <span class="badge amber" id="insp-primary-cause" style="font-size: 9px;">Nominal Sun Tracking</span>
-            </div>
-            <div class="factor-chips-grid">
-              <div class="factor-chip"><span class="chip-k">Dust</span><span class="chip-v" id="chip-dust">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Thermal</span><span class="chip-v" id="chip-heat">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Hotspot</span><span class="chip-v" id="chip-hotspot">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Wiring</span><span class="chip-v" id="chip-wiring">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Crack</span><span class="chip-v" id="chip-crack">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Shading</span><span class="chip-v" id="chip-shading">0%</span></div>
-              <div class="factor-chip"><span class="chip-k">Degrade</span><span class="chip-v" id="chip-degradation">0%</span></div>
-            </div>
-          </div>
-
-          <!-- Structured Visual & Thermal Inspection (PRD §10.5 & §11) -->
-          <div class="inspection-report-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 10px; text-transform: uppercase; color: var(--ai-cyan); font-weight: 700;">Simulated Visual / Thermal CV Inspection</span>
-              <span style="font-size: 9px; color: var(--text-muted);" id="insp-baseline-chip">Scan: 98.2% Baseline</span>
-            </div>
-            <div class="cv-telemetry-grid">
-              <div class="cv-item">
-                <span class="cv-label">Physical Crack:</span>
-                <span class="cv-val" id="cv-crack">Not detected</span>
-              </div>
-              <div class="cv-item">
-                <span class="cv-label">Discoloration:</span>
-                <span class="cv-val" id="cv-discoloration">Nominal ARC film</span>
-              </div>
-              <div class="cv-item">
-                <span class="cv-label">Contamination:</span>
-                <span class="cv-val" id="cv-contamination">Not detected</span>
-              </div>
-              <div class="cv-item">
-                <span class="cv-label">Components:</span>
-                <span class="cv-val" id="cv-components">Torque verified</span>
-              </div>
-              <div class="cv-item">
-                <span class="cv-label">Sand Coverage:</span>
-                <span class="cv-val" id="cv-sand">15%</span>
-              </div>
-            </div>
-            <div id="insp-findings" style="line-height: 1.4; margin-top: 6px; font-size: 11px; color: #cbd5e1; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 5px;">
-              Nominal condition. Cell reflection consistent. No micro-cracks.
-            </div>
-          </div>
-        </div>
-
-        <!-- Energy Storage & Intelligent Routing -->
-        <div class="energy-card glass-panel">
-          <div class="section-title-row">
-            <h3 class="section-title" style="font-size: 13px;">
-              ⚡ Dynamic Energy Routing
-            </h3>
-            <span class="badge amber" id="grid-price-badge">PEAK (₹9.2/kWh)</span>
-          </div>
-
-          <div class="energy-flow-diagram">
-            <div class="flow-node-row">
-              <div class="flow-node active">
-                <span>☀️ Generation</span>
-                <span class="mono-val" id="flow-gen">4.82 MW</span>
-              </div>
-              <div class="flow-arrow active">➔</div>
-              <div class="flow-node" id="flow-node-grid">
-                <span>⚡ Regional Grid</span>
-                <span class="mono-val" id="flow-grid">3.20 MW</span>
-              </div>
-            </div>
-
-            <div class="flow-node-row">
-              <div style="width: 100px;"></div>
-              <div class="flow-arrow">➔</div>
-              <div class="flow-node" id="flow-node-storage">
-                <span>🔋 Desert BESS</span>
-                <span class="mono-val" id="flow-battery">76% SoC</span>
-              </div>
-            </div>
-
-            <div class="flow-node-row">
-              <div style="width: 100px;"></div>
-              <div class="flow-arrow">➔</div>
-              <div class="flow-node" id="flow-node-community">
-                <span>🏘️ Rural Households</span>
-                <span class="mono-val" id="flow-shared">0.52 MW</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Chronological Event Timeline -->
-        <div class="timeline-card glass-panel">
-          <div class="section-title-row">
-            <h3 class="section-title" style="font-size: 13px;">
-              📋 Live Event Timeline
-            </h3>
-            <span style="font-size: 10px; color: var(--text-muted);">AUTO-LOGGING</span>
-          </div>
-
-          <div class="timeline-list" id="timeline-list">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-      </aside>
     </main>
-
-    <!-- Phase 6: System Honesty & Architecture Footer (PRD §16) -->
-    <footer class="dashboard-footer glass-panel">
-      <div class="footer-left">
-        <span class="badge cyan" style="font-size: 9px;">PROTOTYPE DIGITAL TWIN</span>
-        <span class="footer-text">
-          DuneVolt Autonomous Desert Solar Farm • Grounded Engineering Prototype (PRD §13 & §16 Compliance)
-        </span>
-      </div>
-      <div class="footer-right">
-        <button id="btn-open-honesty-footer" class="footer-guide-link">
-          🔬 View Physics Calculations vs Rule-Based AI Breakdown
-        </button>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Phase 5: Demo Progress Overlay Bar -->
-  <div id="demo-overlay" class="demo-overlay" aria-hidden="true">
-    <div class="demo-overlay-inner">
-      <!-- Left: stage chip + narration -->
-      <div class="demo-left">
-        <div class="demo-stage-chip">
-          <span class="demo-film-icon">🎬</span>
-          <span class="demo-label">DEMO MODE</span>
-        </div>
-        <div class="demo-stage-info">
-          <div class="demo-stage-name" id="demo-stage-name">Stage 1: Normal Operation</div>
-          <div class="demo-narration" id="demo-narration">Initializing demo sequence...</div>
-        </div>
-      </div>
-
-      <!-- Center: step dots + progress bar -->
-      <div class="demo-center">
-        <div class="demo-step-dots" id="demo-step-dots">
-          <span class="demo-dot" data-step="1"></span>
-          <span class="demo-dot" data-step="2"></span>
-          <span class="demo-dot" data-step="3"></span>
-          <span class="demo-dot" data-step="4"></span>
-          <span class="demo-dot" data-step="5"></span>
-        </div>
-        <div class="demo-progress-track">
-          <div class="demo-progress-bar" id="demo-progress-bar"></div>
-        </div>
-        <div class="demo-step-label" id="demo-step-label">Step 1 / 5</div>
-      </div>
-
-      <!-- Right: stop button -->
-      <div class="demo-right">
-        <div class="demo-timer-ring">
-          <svg viewBox="0 0 44 44" class="demo-ring-svg">
-            <circle cx="22" cy="22" r="18" class="demo-ring-bg"/>
-            <circle cx="22" cy="22" r="18" class="demo-ring-fill" id="demo-ring-fill"/>
-          </svg>
-          <span class="demo-ring-label" id="demo-ring-label">1/5</span>
-        </div>
-        <button id="btn-stop-demo" class="demo-stop-btn" title="Stop demo and reset">
-          <span>■ Stop</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Phase 6: Interactive Prototype Architecture & Honesty Modal (PRD §13 & §16) -->
-  <div id="modal-honesty" class="honesty-modal-backdrop" aria-hidden="true">
-    <div class="honesty-modal-container glass-panel">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 20px;">🔬</span>
-          <div>
-            <h3 class="modal-title">Prototype Architecture & Claims Honesty Guide</h3>
-            <div style="font-size: 11px; color: var(--text-secondary);">Compliance with PRD Section 13 (Real vs Simulated AI Split) & Section 16 (Claims Guidelines)</div>
-          </div>
-        </div>
-        <button id="btn-close-honesty-modal" class="modal-close-btn" title="Close Modal">&times;</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="honesty-intro-alert">
-          <strong>Transparency Notice:</strong> DuneVolt is an interactive digital twin built for judging demonstration. To maintain rigorous technical honesty, this prototype explicitly separates physics-based mathematical models from rule-based AI simulations.
-        </div>
-
-        <div class="honesty-split-grid">
-          <!-- Column 1: Real Math / Calculations -->
-          <div class="split-card math-card">
-            <div class="split-card-header">
-              <span class="split-badge emerald">⚙️ Computed with Real Math & Physics</span>
-            </div>
-            <ul class="split-list">
-              <li><strong>Sun Trigonometry & Tracking:</strong> Sun elevation angle drives optimal panel tilt ($\theta = 90^\circ - \text{sunAngle}$) dynamically.</li>
-              <li><strong>Thermal Derating Loss:</strong> Standard $-0.4\%/^\circ\text{C}$ temperature derate applied above $25^\circ\text{C}$ STC baseline.</li>
-              <li><strong>Dust Soiling Attenuation:</strong> Optical transmission derating calculated directly from particulate concentration.</li>
-              <li><strong>Loss Attribution Arithmetic:</strong> Panel output vs expected baseline calculated across all active arrays.</li>
-              <li><strong>Energy Balance Routing:</strong> $\text{Generation} = \text{Grid Export} + \text{Battery Charge} + \text{Shared Community Solar}$.</li>
-            </ul>
-          </div>
-
-          <!-- Column 2: Simulated / Rule-Based AI -->
-          <div class="split-card ai-card">
-            <div class="split-card-header">
-              <span class="split-badge cyan">🤖 Simulated & Rule-Based AI Engine</span>
-            </div>
-            <ul class="split-list">
-              <li><strong>Storm Risk Prediction:</strong> Multi-sensor weighted risk composite (wind, dust, visibility thresholds).</li>
-              <li><strong>Compressed Time-Scale:</strong> 10-second storm countdown simulates a real-world 25-minute radar horizon.</li>
-              <li><strong>7-Factor Root Cause Attribution:</strong> Multi-factor diagnostic isolation (dust, thermal, hotspot, wiring, crack, shading, degradation).</li>
-              <li><strong>Visual & Thermal CV Findings:</strong> High-resolution optical/thermal scan report generated from sensor telemetry.</li>
-              <li><strong>Condition-Based Maintenance:</strong> Prioritized cleaning queue ranked by economic revenue loss (₹) vs dispatch cost.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="modal-claims-box">
-          <h4 style="font-size: 12px; text-transform: uppercase; color: var(--solar-gold); margin-bottom: 6px;">Product Vision & Positioning</h4>
-          <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-            DuneVolt proves that centralized, AI-managed desert solar can absorb the extreme maintenance and operational burden of harsh desert environments — providing a scalable, resilient alternative that reduces community dependence on universal rooftop solar adoption.
-          </p>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button id="btn-ack-honesty" class="modal-primary-btn">Acknowledge & Close</button>
-      </div>
-    </div>
   </div>
 
   <!-- Application Logic -->

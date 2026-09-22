@@ -27,11 +27,31 @@ app.use(express.json());
 
 // Serve vendor assets (Three.js)
 app.use('/vendor/three', express.static(path.join(__dirname, 'node_modules', 'three', 'build')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+}));
 
 // Fallback routes for easy navigation
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/operations', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'operations.html'));
+});
+
+app.get('/diagnostics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'operations.html'));
+});
+
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'operations.html'));
 });
 
 app.get('/controller', (req, res) => {
@@ -618,6 +638,7 @@ const defaultState = () => ({
       temperature: 38,
       health: 'NORMAL',
       state: 'TRACKING',
+      shieldDeploy: 0,
       lastCleaned: '18 Sep 2026',
       nextCleaning: '23 Sep 2026',
       faultStatus: 'NONE',
@@ -653,6 +674,7 @@ const defaultState = () => ({
       temperature: 39,
       health: 'NORMAL',
       state: 'TRACKING',
+      shieldDeploy: 0,
       lastCleaned: '18 Sep 2026',
       nextCleaning: '23 Sep 2026',
       faultStatus: 'NONE',
@@ -688,6 +710,7 @@ const defaultState = () => ({
       temperature: 38,
       health: 'NORMAL',
       state: 'TRACKING',
+      shieldDeploy: 0,
       lastCleaned: '18 Sep 2026',
       nextCleaning: '23 Sep 2026',
       faultStatus: 'NONE',
@@ -744,7 +767,10 @@ let demoActive = false;
 let demoTimers = [];
 
 function clearAllTimers() {
-  activeTimers.forEach(t => clearTimeout(t));
+  activeTimers.forEach(t => {
+    clearTimeout(t);
+    clearInterval(t);
+  });
   activeTimers = [];
 }
 
@@ -856,8 +882,20 @@ function recalculateFarmPhysics() {
       panel.state = farm.operatingMode === 'STORM' ? 'PROTECTED' : 'PROTECTING';
       panel.tilt = 12; // Flat defensive aerodynamic stow angle
       panel.azimuth = 180;
+      panel.shieldDeploy = 100;
       panel.output = +(unconstrainedExpected * 0.08).toFixed(2);
+    } else if (farm.operatingMode === 'WARNING' && prediction.countdown !== null) {
+      // Phase 3: Fast stow and shield deployment during the 10s countdown
+      // Count 10..5 (0s..5s): panels tilt from targetTilt down to 12°, shields deploy 0% -> 100%
+      // Count 5..0: panels locked at 12°, shields 100%, holding defensive profile
+      const stowProgress = Math.max(0, Math.min(1.0, (10 - prediction.countdown) / 5));
+      panel.shieldDeploy = Math.round(stowProgress * 100);
+      panel.tilt = Math.round(targetTilt + (12 - targetTilt) * stowProgress);
+      panel.azimuth = 180;
+      panel.state = 'PROTECTING';
+      panel.output = +(unconstrainedExpected * Math.max(0.08, 1 - 0.92 * stowProgress)).toFixed(2);
     } else {
+      panel.shieldDeploy = 0;
       panel.state = farm.operatingMode === 'CLEANING' ? 'CLEANING' : (panel.faultStatus !== 'NONE' ? 'FAULT' : 'TRACKING');
       panel.tilt = targetTilt;
       panel.azimuth = targetAzimuth;
@@ -1088,50 +1126,52 @@ function startStormDefenseSequence() {
   farmState.farm.operatingMode = 'WARNING';
   farmState.farm.activeAlert = 'AI EARLY WARNING: High storm probability detected. Initiating automated protective stow cycle.';
   addEvent('WARNING', `AI Storm Early Warning: Risk evaluated at ${farmState.prediction.stormRisk}%. Countdown started.`);
-  broadcastState();
 
   let count = 10;
   farmState.prediction.countdown = count;
+  recalculateFarmPhysics();
+  broadcastState();
 
   const countdownInterval = setInterval(() => {
     count--;
     farmState.prediction.countdown = count;
     if (count > 0) {
+      if (count === 5) {
+        // Phase 3: At second 5 (countdown=5), panels have reached 12° stow and 100% shield deployment
+        farmState.farm.operatingMode = 'PROTECTING';
+        farmState.farm.activeAlert = 'DEFENSE COMPLETE: All arrays stowed (12°) & ballistic shields locked • Holding for storm front.';
+        addEvent('SUCCESS', 'Autonomous Protection: Panel arrays locked at 12° stow angle with ballistic deflector shields engaged. Holding.');
+      } else if (count < 5) {
+        farmState.farm.operatingMode = 'PROTECTING';
+        farmState.farm.activeAlert = `DEFENSE COMPLETE: Arrays stowed (12°) & locked • Holding for storm front (T-${count}s).`;
+      }
+      recalculateFarmPhysics();
       broadcastState();
     } else {
       clearInterval(countdownInterval);
       farmState.prediction.countdown = null;
-      executePanelProtection();
+      executeStormArrival();
     }
   }, 1000);
 
   activeTimers.push(countdownInterval);
 }
 
-function executePanelProtection() {
-  farmState.farm.operatingMode = 'PROTECTING';
-  farmState.farm.activeAlert = 'PROTECTIVE MODE ACTIVE: Actuators stowing panels to aerodynamic desert defensive position.';
-  addEvent('ACTION', 'Autonomous Protection: Panel arrays moving to 12° stow angle.');
+function executeStormArrival() {
+  farmState.farm.operatingMode = 'STORM';
+  farmState.environment.stormIntensity = 95;
+  farmState.environment.visibility = 25;
+  farmState.environment.windSpeed = 95;
+  farmState.farm.activeAlert = 'SEVERE SANDSTORM IN PROGRESS: Arrays securely locked in defensive profile.';
+  addEvent('CRITICAL', 'Sandstorm Peak: Visibility dropped to 25%. Solar arrays protected.');
   recalculateFarmPhysics();
   broadcastState();
 
-  // After stowing finishes, storm arrives
-  const stormArrivalTimer = setTimeout(() => {
-    farmState.farm.operatingMode = 'STORM';
-    farmState.environment.stormIntensity = 95;
-    farmState.environment.visibility = 25;
-    farmState.farm.activeAlert = 'SEVERE SANDSTORM IN PROGRESS: Arrays securely locked in defensive profile.';
-    addEvent('CRITICAL', 'Sandstorm Peak: Visibility dropped to 25%. Solar arrays protected.');
-    recalculateFarmPhysics();
-    broadcastState();
-
-    // Storm duration: 8 seconds
-    const stormPassTimer = setTimeout(() => {
-      recoverFromStorm();
-    }, 8000);
-    activeTimers.push(stormPassTimer);
-  }, 2500);
-  activeTimers.push(stormArrivalTimer);
+  // Storm duration: 8 seconds
+  const stormPassTimer = setTimeout(() => {
+    recoverFromStorm();
+  }, 8000);
+  activeTimers.push(stormPassTimer);
 }
 
 function recoverFromStorm() {
@@ -1496,7 +1536,12 @@ function handleClientAction(msg, ws) {
     }
 
     case 'SIMULATE_STORM': {
-      // Storm trigger: raise wind & dust, triggering autonomous prediction and stow
+      // Deterministic storm trigger: reset any non-storm intermediate operational states so countdown starts immediately
+      if (farmState.farm.operatingMode !== 'NORMAL' && farmState.farm.operatingMode !== 'WARNING') {
+        clearAllTimers();
+        farmState.maintenance.cleaningRobotActive = false;
+        farmState.farm.operatingMode = 'NORMAL';
+      }
       farmState.environment.windSpeed = 92;
       farmState.environment.dustLevel = 65;
       farmState.environment.visibility = 60;

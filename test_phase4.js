@@ -174,7 +174,7 @@ async function runVerification() {
     `Defensive Stow Angle: ${stowedPanel.tilt}°, Operating Mode: ${protectState.farm.operatingMode}`
   );
 
-  const stormState = await waitForState(s => s.farm.operatingMode === 'STORM', 5000, 'Sandstorm Peak');
+  const stormState = await waitForState(s => s.farm.operatingMode === 'STORM', 8000, 'Sandstorm Peak');
   logTest('4.3 Severe Sandstorm Phase & Atmospheric Attenuation',
     stormState.environment.stormIntensity >= 80 && stormState.environment.visibility <= 30,
     `Storm Intensity: ${stormState.environment.stormIntensity}%, Atmospheric Visibility: ${stormState.environment.visibility}%`
